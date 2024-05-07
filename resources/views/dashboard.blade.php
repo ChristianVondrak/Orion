@@ -31,7 +31,9 @@
                 </thead>
                 <tbody class="bg-white">
                     <tr>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">Avanty way</td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            <a href="#" class="text-indigo-600 hover:text-indigo-900">Avanty way</a>
+                        </td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">15</td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">423 Hours</td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
@@ -40,7 +42,9 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">Profolio</td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            <a href="#" class="text-indigo-600 hover:text-indigo-900">Profolio</a>
+                        </td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">10</td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">423 Hours</td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
@@ -49,7 +53,9 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">Savvy way</td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            <a href="#" class="text-indigo-600 hover:text-indigo-900">Savvy way</a>
+                        </td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">30</td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">423 Hours</td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
