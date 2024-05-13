@@ -1,7 +1,10 @@
 version: '3'
 services:
   ppl-erp:
-    image: webdevops/php-nginx:8.3
+    # image: webdevops/php-nginx:8.3
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       - ppl-erp-db
     container_name: ppl-erp
@@ -14,6 +17,9 @@ services:
       - DB_URL=mysql://ppl_erp:secret@ppl-erp-db/ppl_erp_db
     ports:
       - "8299:80"
+      - "8000:8000"
+      - "5173:5173"
+      - "433:433"
 
   ppl-erp-db:
     image: mysql:latest
