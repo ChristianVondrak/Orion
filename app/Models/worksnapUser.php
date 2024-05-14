@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class Project extends Model
+class worksnapUser extends Model
 {
     use HasFactory;
-    public function worksnapUsers(): BelongsToMany
+
+    public function projects(): BelongsToMany
     {
-        return $this->belongsToMany(worksnapUser::class, 'project_user', 'project_id', 'user_id');
+        return $this->belongsToMany(Project::class, 'project_user', 'user_id', 'project_id');
     }
 }
