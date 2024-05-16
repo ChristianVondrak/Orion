@@ -17,14 +17,16 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
         Role::factory()->create([
             'name' => 'Administrator',
-            'description' => 'All permissions',
+            'description' => 'Total privileges and absolute control.'
         ]);
 
         User::factory()->create([
             'name' => 'Administrator',
             'email' => 'admin@admin.com',
-            'role_id' => '1',
             'password' => 'admin1234',
+            'role_id' => 1
         ]);
+
+
     }
 }
