@@ -22,7 +22,8 @@ export default {
     darkMode: 'class',
 
     plugins: [
-            forms,
-            typography,
-            require('flowbite/plugin')],
+        forms,
+        typography,
+        require('flowbite/plugin'),
+    ],
 };
