@@ -33,11 +33,12 @@
                 @foreach($projects as $project)
                     <tr>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <a href="{{route('project.show',['id'=>$project->id])}}" class="text-indigo-600 hover:text-indigo-900">{{$project->name}}</a>
+                            <a href="{{route('project.show',['id'=>$project->id])}}"
+                               class="text-indigo-600 hover:text-indigo-900">{{$project->name}}</a>
                         </td>
                         {{--              Count of users per project            --}}
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">{{$project->worksnapUsers->count()}}
-                        {{$projectUser->where('project_id',$project->id)->count()}}</td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            {{$projectUser->where('project_id', $project->id)->count()}}</td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">423 Hours</td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                             <span

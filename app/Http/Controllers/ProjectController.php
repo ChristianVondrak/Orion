@@ -41,12 +41,17 @@ class ProjectController extends Controller
             ->groupBy('wu.first_name', 'wu.last_name', 'pu.hourly_rate')
             ->get();
 
-        foreach ($results as $result){
+//        Configure Cascade from Carbon for show only Hours and minutes
+        CarbonInterval::setCascadeFactors([
+            'minute' => [60, 'seconds'],
+            'hour' => [60, 'minutes']
+        ]);
+
+        foreach ($results as $result) {
             $interval = CarbonInterval::minutes($result->Minutes_Worked)->cascade();
-            $result->Minutes_Worked = sprintf('%dh %dm', floor($interval->totalHours), $interval->toArray()['minutes']);
+            $result->Minutes_Worked = $interval;
         }
 
         return view('projects.show', compact('project', 'startDate', 'endDate', 'results'));
-
     }
 }
