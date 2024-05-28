@@ -12,7 +12,17 @@ class Project extends Model
     use HasFactory;
     public function worksnapUsers(): BelongsToMany
     {
-        return $this->belongsToMany(worksnapUser::class, 'project_user', 'project_id', 'user_id')->withPivot('hourly_rate');
+        return $this->belongsToMany(
+            worksnapUser::class,
+            'project_user',
+            'project_id',
+            'user_id'
+        )->withPivot('hourly_rate');
+    }
+
+    public function projectUsers(): HasMany
+    {
+        return $this->hasMany(projectUser::class);
     }
 
     public function timmings(): HasMany

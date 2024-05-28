@@ -14,6 +14,5 @@ Route::middleware([
     'verified',
 ])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home.index');
-
     Route::get('/project/{id}', [ProjectController::class, 'show'])->name('project.show');
 });

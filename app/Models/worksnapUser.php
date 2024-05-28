@@ -17,6 +17,6 @@ class worksnapUser extends Model
     }
     public function timmings(): HasMany
     {
-        return $this->hasMany(Timming::class);
+        return $this->hasMany(Timming::class,'user_id', 'id');
     }
 }
