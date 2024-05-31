@@ -3,12 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
-use App\Models\projectUser;
 use Carbon\Carbon;
-use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {

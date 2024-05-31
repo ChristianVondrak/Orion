@@ -40,7 +40,7 @@
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                         {{$project->ProjectUsers->count()}}
                         {{--                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"> <span class="text-red-500">{{$project->Minutes_Worked}}</span> / {{$project->estimated_time}} Hours</td>--}}
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">{{floor($project->timmings_count*10 / 60)}}
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">{{$project->timings_count_in_hours}}
                             Hours
                         </td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
