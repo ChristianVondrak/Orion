@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Project extends Model
 {
     use HasFactory;
+
     public function worksnapUsers(): BelongsToMany
     {
         return $this->belongsToMany(

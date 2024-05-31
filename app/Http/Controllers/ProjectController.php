@@ -7,8 +7,6 @@ use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use function PHPUnit\Framework\isEmpty;
-use function PHPUnit\Framework\isNull;
 
 class ProjectController extends Controller
 {
@@ -32,7 +30,7 @@ class ProjectController extends Controller
                 'pu.hourly_rate',
                 DB::raw('COUNT(t.from_timestamp) * 10 AS Minutes_Worked')
             )
-            ->join('project_user AS pu', 'pu.user_id', '=', 'wu.id')
+            ->join('project_users AS pu', 'pu.user_id', '=', 'wu.id')
             ->join('projects AS p', 'p.id', '=', 'pu.project_id')
             ->join('timmings AS t', 't.user_id', '=', 'wu.id')
             ->where('t.from_timestamp', '>=', DB::raw("UNIX_TIMESTAMP(CONVERT_TZ('$startDate', '+00:00', '-02:00'))"))

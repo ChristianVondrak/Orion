@@ -38,17 +38,23 @@
                         </td>
                         {{--              Count of users per project            --}}
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            {{$projectUser->where('project_id', $project->id)->count()}}</td>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">423 Hours</td>
+                        {{$project->ProjectUsers->count()}}
+                        {{--                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"> <span class="text-red-500">{{$project->Minutes_Worked}}</span> / {{$project->estimated_time}} Hours</td>--}}
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">{{floor($project->timmings_count*10 / 60)}}
+                            Hours
+                        </td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <span
-                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                @if($project->status == 1)
+                            @if($project->status == 1)
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                     Active
-                                @else
+                                </span>
+                            @else
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
                                     Inactive
-                                @endif
-                            </span>
+                                </span>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
