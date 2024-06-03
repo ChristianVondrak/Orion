@@ -10,7 +10,7 @@
             {{ __('Project Detail') }}
         </h2>
     </x-slot>
-    <div class="py-12 flex flex-col justify-center items-start lg:mx-20 mx-4 md:mx-10">
+    <div class="flex flex-col justify-center items-start lg:mx-20 mx-4 md:mx-10 pt-12 pb-6">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ $project->name  }}
         </h2>
@@ -21,6 +21,7 @@
             <div class="relative col-md-6">
 
                 <input class="form-control form-control-solid" placeholder="Pick date rage" id="kt_daterangepicker_4" name="start"/>
+                <input class="form-control form-control-solid" type="hidden" name="end"/>
 
                 <script>
                     var start = moment().startOf("month");
@@ -44,7 +45,8 @@
                     }, cb);
 
                     $('input[name="start"]').on('apply.daterangepicker', function(ev, picker) {
-                        $(this).val(picker.startDate.format('YYYY/MM/DD') + ' - ' + picker.endDate.format('YYYY/MM/DD'));
+                        $(this).val(picker.startDate.format('YYYY/MM/DD'));
+                        $('input[name="end"]').val(picker.endDate.format('YYYY/MM/DD'));
                     });
 
                     cb(start, end);
@@ -84,8 +86,6 @@
             </div>
         </div>
     </form>
-    <h1>{{$startDate}}</h1>
-    <h1>{{$endDate}}</h1>
     {{-- Margin in Y 48px --}}
     <div class="py-12 flex flex-col justify-center items-center lg:mx-20 mx-4 md:mx-10">
 
@@ -113,20 +113,28 @@
                 </tr>
                 </thead>
                 <tbody class="bg-white">
-                    @foreach($results as $result)
+                    @foreach($project->projectUsers as $projectUser)
+                        @php
+                            $user = $projectUser->worknapUser;
+                            if ($user->timings_count_in_hours->totalSeconds == 0){
+                                continue;
+                            }
+                        @endphp
                     <tr>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                             <a href="#"
-                               class="text-indigo-600 hover:text-indigo-900">{{$result->first_name }} {{$result->last_name}}</a>
+                               class="text-indigo-600 hover:text-indigo-900">{{$user->first_name }} {{$user->last_name}}</a>
                         </td>
                         {{--              timmings            --}}
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">{{$result->Minutes_Worked}}
-{{--                            {{$result->aa}}--}}
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            {{$user->timings_count_in_hours}}
                         </td>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">{{$result->hourly_rate}}
-                            $
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            {{$projectUser->hourly_rate}} $
                         </td>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">126$</td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            {{$user->total_profits($user->timings_count_in_hours,$projectUser->hourly_rate)}}$
+                        </td>
                     </tr>
                 @endforeach
                 </tbody>
