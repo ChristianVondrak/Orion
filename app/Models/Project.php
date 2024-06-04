@@ -59,6 +59,6 @@ class Project extends Model
      */
     public function getTimingsCountInHoursAttribute()
     {
-        return floor($this->timmings_count*10 / 60);
+        return floor($this->timmings_count* 10 / 60);
     }
 }

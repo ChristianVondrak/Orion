@@ -10,11 +10,21 @@ class Timming extends Model
 {
     use HasFactory;
 
+    /**
+     * Defines a "belongs to" relationship with the worksnapUser model.
+     *
+     * @return BelongsTo
+     */
     public function worksnapUsers(): BelongsTo
     {
         return $this->BelongsTo(worksnapUser::class);
     }
 
+    /**
+     * Defines a "belongs to" relationship with the project model.
+     *
+     * @return BelongsTo
+     */
     public function Projects(): BelongsTo
     {
         return $this->BelongsTo(Project::class);

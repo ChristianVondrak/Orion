@@ -10,11 +10,21 @@ class projectUser extends Model
 {
     use HasFactory;
 
+    /**
+     * Defines a "belongs to" relationship with the project model.
+     *
+     * @return BelongsTo
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
 
+    /**
+     * Defines a "belongs to" relationship with the worksnapUser model.
+     *
+     * @return BelongsTo
+     */
     public function worknapUser(): BelongsTo
     {
         return $this->belongsTo(worksnapUser::class, 'user_id');

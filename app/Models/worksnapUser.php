@@ -12,10 +12,20 @@ class worksnapUser extends Model
 {
     use HasFactory;
 
+    /**
+     * Defines a many-to-many relationship with Project.
+     *
+     * @return BelongsToMany
+     */
     public function projects(): BelongsToMany
     {
-        return $this->belongsToMany(Project::class, 'project_user', 'user_id', 'project_id')->withPivot('hourly_rate');
+        return $this->belongsToMany(Project::class,
+            'project_user',
+            'user_id',
+            'project_id')
+            ->withPivot('hourly_rate');
     }
+
     /**
      * Get the related Timming models.
      *
@@ -59,7 +69,14 @@ class worksnapUser extends Model
         return ($interval);
     }
 
-    public function total_profits($hours,$rate)
+    /**
+     * Calculate total profits per User.
+     *
+     * @param $hours
+     * @param $rate
+     * @return float
+     */
+    public function totalProfits($hours,$rate): float
     {
         $hours= $hours->totalHours;
         return (round($hours*$rate,2));
