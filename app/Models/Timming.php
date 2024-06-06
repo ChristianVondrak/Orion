@@ -15,7 +15,7 @@ class Timming extends Model
      *
      * @return BelongsTo
      */
-    public function worksnapUsers(): BelongsTo
+    public function worksnapUser(): BelongsTo
     {
         return $this->BelongsTo(worksnapUser::class);
     }
@@ -25,7 +25,7 @@ class Timming extends Model
      *
      * @return BelongsTo
      */
-    public function Projects(): BelongsTo
+    public function Project(): BelongsTo
     {
         return $this->BelongsTo(Project::class);
     }
