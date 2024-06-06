@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 class UserController extends Controller
 {
     public function show($id){
+        // variables to filter between 2 dates
         $startDate = Carbon::now()->startOfWeek()->shiftTimezone('UTC')->timestamp;
         $endDate = Carbon::now()->endOfWeek()->shiftTimezone('UTC')->timestamp;
 
