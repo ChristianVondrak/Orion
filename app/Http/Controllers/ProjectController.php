@@ -16,8 +16,14 @@ class ProjectController extends Controller
 
         // If the filter comes by request, the given one is used
         if ($request->has('start') && $request->has('end')) {
-            $startDate = Carbon::createFromFormat('Y/m/d', $request->input('start'))->shiftTimezone('UTC')->timestamp;
-            $endDate = Carbon::createFromFormat('Y/m/d', $request->input('end'))->shiftTimezone('UTC')->timestamp;
+            $startDate = Carbon::createFromFormat('Y/m/d', $request->input('start'))
+                ->startOfDay()
+                ->shiftTimezone('UTC')
+                ->timestamp;
+            $endDate = Carbon::createFromFormat('Y/m/d', $request->input('end'))
+                ->endOfDay()
+                ->shiftTimezone('UTC')
+                ->timestamp;
         }
 
         // Retrieve a project with associated users and their work timings within a specified date range.

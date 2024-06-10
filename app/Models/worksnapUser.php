@@ -65,8 +65,7 @@ class worksnapUser extends Model
         ]);
 
         $minutes = $this->timmings->count();
-        $interval = CarbonInterval::minutes($minutes*10)->cascade();
-        return ($interval);
+        return CarbonInterval::minutes($minutes*10)->cascade();
     }
 
     /**
