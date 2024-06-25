@@ -12,7 +12,7 @@
 
     <div class="flex justify-between items-center">
         <div class="flex-initial">
-            <!-- Contenido del div de la izquierda -->
+            <!-- Left content div -->
             <div class="flex flex-col justify-center items-start lg:mx-20 mx-4 md:mx-10 pt-12 pb-6">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     {{ $project->name  }}
@@ -22,6 +22,7 @@
                 </p>
             </div>
         </div>
+
         <div class="flex-initial">
             <!-- Contenido del div de la derecha -->
             <form action="{{route('project.show',['id'=>$project->id])}}" method="GET">
@@ -43,8 +44,6 @@
             </form>
         </div>
     </div>
-
-
 
     <div class="pb-12 flex flex-col justify-center items-center lg:mx-20 mx-4 md:mx-10">
         <div class="align-middle inline-block min-w-full overflow-hidden sm:rounded-lg border-gray-200 shadow">
@@ -68,9 +67,9 @@
 
                 <tbody class="bg-white">
                     @foreach($project->projectUsers as $projectUser)
-                    @php
-                    $user = $projectUser->worknapUser;
-                    @endphp
+                        @php
+                            $user = $projectUser->worknapUser;
+                        @endphp
                     <tr>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                             <a href="#" class="text-indigo-600 hover:text-indigo-900">

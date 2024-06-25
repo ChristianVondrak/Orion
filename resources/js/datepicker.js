@@ -40,7 +40,7 @@ $("#kt_daterangepicker_4").daterangepicker({
         format: 'DD/MM/YYYY'
     }
 }, function(start, end) {
-    // Asignar valor al input start y end
+    // Asignar valor al input para que reciba en controlador
     $("#start").val(start.format('YYYY/MM/DD'));
     $("#end").val(end.format('YYYY/MM/DD'));
 });
