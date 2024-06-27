@@ -1,12 +1,13 @@
-<x-app-layout>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+@php use App\Models\Project; @endphp
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
+<x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Project Detail') }}
+            {{ __('User Detail') }}
         </h2>
     </x-slot>
 
@@ -15,17 +16,16 @@
             <!-- Left content div -->
             <div class="flex flex-col justify-center items-start lg:mx-20 mx-4 md:mx-10 pt-12 pb-6">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    {{ $project->name  }}
+                    {{ $user->first_name }} {{ $user->last_name }}
                 </h2>
                 <p class="my-4 text-lg text-gray-500">
-                    {{$project->description}}
-                </p>
+                    {{$user->email}}</p>
             </div>
         </div>
 
         <!-- Right content div -->
         <div class="flex-initial">
-            <form action="{{route('project.show',['id'=>$project->id])}}" method="GET">
+            <form action="{{route('user.show',['id'=>$user->id])}}" method="GET">
                 <div class="flex  items-center justify-end  lg:mx-20 mx-4 md:mx-10">
                     <input type="hidden" name="end" id="end" />
                     <input type="hidden" name="start" id="start" />
@@ -47,49 +47,63 @@
 
     <div class="pb-12 flex flex-col justify-center items-center lg:mx-20 mx-4 md:mx-10">
         <div class="align-middle inline-block min-w-full overflow-hidden sm:rounded-lg border-gray-200 shadow">
-            <table class="table-fixed w-full">
+            <table class="table-auto w-full">
                 <thead>
-                    <tr>
-                        <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                            Users
-                        </th>
-                        <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                            Total Hours
-                        </th>
-                        <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                            Rating
-                        </th>
-                        <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                            Total profits
-                        </th>
-                    </tr>
+                <tr>
+                    <th
+                        class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                    </th>
+                    <th
+                        class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                        Project
+                    </th>
+                    <th
+                        class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                        Task
+                    </th>
+                    <th
+                        class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                        Activity Level
+                    </th>
+                    <th
+                        class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                        Timing
+                    </th>
+                </tr>
                 </thead>
 
                 <tbody class="bg-white">
-                    @foreach($project->projectUsers as $projectUser)
-                        @php
-                            $user = $projectUser->worknapUser;
-                        @endphp
+                @foreach($timmings as $timming)
                     <tr>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <a href="#" class="text-indigo-600 hover:text-indigo-900">
-                                {{$user->first_name }} {{$user->last_name}}
+                                {{$timming->human_time_from_timestamp }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            @php
+                            $project = $timming->project;
+                            @endphp
+                            {{$project->name}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            {{$timming->task_name}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-center">
+                            {{$timming->activity_level}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            <a href="#"
+                               class="text-indigo-600 hover:text-indigo-900">
+                                {{$timming->from_timestamp }}
                             </a>
                         </td>
-                        {{-- timmings            --}}
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            {{$user->timings_count_in_hours}}
-                        </td>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            {{$projectUser->hourly_rate}} $
-                        </td>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            {{$user->totalProfits($user->timings_count_in_hours,$projectUser->hourly_rate)}}$
-                        </td>
                     </tr>
-                    @endforeach
+                @endforeach
                 </tbody>
             </table>
+            <div>
+                {{ $timmings->appends(['start' => request('start'), 'end' => request('end')])->links() }}
+            </div>
         </div>
     </div>
 </x-app-layout>

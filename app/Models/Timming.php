@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Carbon\Carbon;
 
 class Timming extends Model
 {
@@ -28,5 +29,11 @@ class Timming extends Model
     public function Project(): BelongsTo
     {
         return $this->BelongsTo(Project::class);
+    }
+
+    public function getHumanTimeFromTimestampAttribute()
+    {
+        $fechaConHora = Carbon::createFromTimestamp($this->from_timestamp, 'America/Caracas')->format('d. F Y, g:i A');
+        return $fechaConHora;
     }
 }
