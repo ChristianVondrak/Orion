@@ -16,8 +16,8 @@ var urlEnd = getParameterByName('end');
 // Comprobar si existen los parámetros en la URL
 if (urlStart && urlEnd) {
     // Si existen, asignar los valores de la URL 
-    start = moment(urlStart);
-    end = moment(urlEnd);
+    start = moment(urlStart, "YYYY/MM/DD");
+    end = moment(urlEnd, "YYYY/MM/DD");
 }  else {
     // Si no existen, asignar inicio de mes y final de mes
     start = moment().startOf("month");

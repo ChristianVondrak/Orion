@@ -93,3 +93,5 @@
         </div>
     </div>
 </x-app-layout>
+
+<script type="text/javascript" src="{{ asset('js/datepicker.js') }}"></script>
