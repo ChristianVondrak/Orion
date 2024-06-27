@@ -5,7 +5,6 @@
         </h2>
     </x-slot>
 
-    {{-- Margin in Y 48px --}}
     <div class="py-12 flex flex-col justify-center items-center lg:mx-20 mx-4 md:mx-10">
         <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200">
             <table class="table-fixed w-full">
@@ -33,56 +32,30 @@
                 @foreach($projects as $project)
                     <tr>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <a href="#" class="text-indigo-600 hover:text-indigo-900">{{$project->name}}</a>
+                            <a href="{{route('project.show',['id'=>$project->id])}}"
+                               class="text-indigo-600 hover:text-indigo-900">{{$project->name}}</a>
                         </td>
                         {{--              Count of users per project            --}}
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">{{$project->worksnapUsers->count()}}</td>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">423 Hours</td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <span
-                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                @if($project->status == 1)
+                        {{$project->ProjectUsers->count()}}
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            {{$project->timings_count_in_hours}} Hours
+                        </td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            @if($project->status == 1)
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                     Active
-                                @else
+                                </span>
+                            @else
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
                                     Inactive
-                                @endif
-                            </span>
+                                </span>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
-                <tr>
-                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                        <a href="#" class="text-indigo-600 hover:text-indigo-900">Avanty way</a>
-                    </td>
-                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">15</td>
-                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">423 Hours</td>
-                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <span
-                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                        <a href="#" class="text-indigo-600 hover:text-indigo-900">Profolio</a>
-                    </td>
-                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">10</td>
-                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">423 Hours</td>
-                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <span
-                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                        <a href="#" class="text-indigo-600 hover:text-indigo-900">Savvy way</a>
-                    </td>
-                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">30</td>
-                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">423 Hours</td>
-                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <span
-                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>
-                    </td>
-                </tr>
                 </tbody>
             </table>
         </div>
