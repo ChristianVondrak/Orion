@@ -20,7 +20,7 @@ class worksnapUser extends Model
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class,
-            'project_user',
+            'project_users',
             'user_id',
             'project_id')
             ->withPivot('hourly_rate');

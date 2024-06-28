@@ -8,7 +8,8 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function show(Request $request,$id){
+    public function show(Request $request, $id){
+        // variables to filter between 2 dates
         $startDate = Carbon::now()->startOfWeek()->shiftTimezone('UTC')->timestamp;
         $endDate = Carbon::now()->endOfWeek()->shiftTimezone('UTC')->timestamp;
 
@@ -24,21 +25,26 @@ class UserController extends Controller
                 ->timestamp;
         }
 
-        //user with their timings between 2 dates
+        //search for a user by their id
         $user = worksnapUser::find($id);
 
         if ($user) {
-            $perPage = 10; // Ajusta la cantidad de elementos por página según sea necesario
+            $perPage = 10;
+            //search for timings associated with a user between 2 dates
             $timmings = $user->timmings()
                 ->whereBetween('from_timestamp', [$startDate, $endDate])
                 ->where('user_id', $id)
-                ->paginate($perPage)->appends([
-                    'start' => $startDate,
-                    'end' => $endDate,
-                ]);
+                //Add start and end parameters to pagination links to maintain these filters during page navigation.
+                ->get();
 
-            // Pass paginated timings to the view
-            return view('users.show', compact('user', 'timmings'));
+            // Agrupar los timmings por día y sumar los tiempos
+            $timmingsByDay = $timmings->groupBy(function($item) {
+                return Carbon::createFromTimestamp($item->from_timestamp)->format('Y-m-d');
+            })->map(function($dayGroup) {
+                return $dayGroup->count() * 10 * 60; // 10 minutos en segundos
+            });
+
+            return view('users.show', compact('user', 'timmings', 'timmingsByDay'));
         } else {
             // Handle user not found scenario
             return abort(404);

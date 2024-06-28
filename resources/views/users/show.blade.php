@@ -56,6 +56,10 @@
                     </th>
                     <th
                         class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                        Total Hours
+                    </th>
+                    <th
+                        class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
                         Project
                     </th>
                     <th
@@ -66,44 +70,31 @@
                         class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
                         Activity Level
                     </th>
-                    <th
-                        class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                        Timing
-                    </th>
                 </tr>
                 </thead>
 
                 <tbody class="bg-white">
-                @foreach($timmings as $timming)
+                @foreach ($timmingsByDay as $date => $totalSeconds)
                     <tr>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                                {{$timming->human_time_from_timestamp }}
+                                {{$date }}
                         </td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            @php
-                            $project = $timming->project;
-                            @endphp
-                            {{$project->name}}
+                            {{ gmdate('H:i', $totalSeconds) }} Hours
                         </td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            {{$timming->task_name}}
+                            Avanti way
+                        </td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            CRM
                         </td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-center">
-                            {{$timming->activity_level}}
-                        </td>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <a href="#"
-                               class="text-indigo-600 hover:text-indigo-900">
-                                {{$timming->from_timestamp }}
-                            </a>
+                            10
                         </td>
                     </tr>
                 @endforeach
                 </tbody>
             </table>
-            <div>
-                {{ $timmings->appends(['start' => request('start'), 'end' => request('end')])->links() }}
-            </div>
         </div>
     </div>
 </x-app-layout>

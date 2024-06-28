@@ -31,9 +31,16 @@ class Timming extends Model
         return $this->BelongsTo(Project::class);
     }
 
+    /**
+     * Get the human-readable formatted time from the timestamp.
+     *
+     * @return string The formatted date and time.
+     */
     public function getHumanTimeFromTimestampAttribute()
     {
-        $fechaConHora = Carbon::createFromTimestamp($this->from_timestamp, 'America/Caracas')->format('d. F Y, g:i A');
-        return $fechaConHora;
+        return  Carbon::createFromTimestamp(
+            $this->from_timestamp,
+            'America/Caracas')
+            ->format('d. F Y, g:i A');
     }
 }
