@@ -13,14 +13,16 @@ class UserController extends Controller
         // variables to filter between 2 dates
         $startDate = Carbon::now()->startOfWeek()->shiftTimezone('UTC')->timestamp;
         $endDate = Carbon::now()->endOfWeek()->shiftTimezone('UTC')->timestamp;
+        // ProjectId in case of filter per project
+        $projectId = $request->query('project_id');
 
         // If the filter comes by request, the given one is used
         if ($request->has('start') && $request->has('end')) {
-            $startDate = Carbon::createFromFormat('Y/m/d', $request->input('start'))
+            $startDate = Carbon::createFromFormat('Y/m/d', $request->query('start'))
                 ->startOfDay()
                 ->shiftTimezone('UTC')
                 ->timestamp;
-            $endDate = Carbon::createFromFormat('Y/m/d', $request->input('end'))
+            $endDate = Carbon::createFromFormat('Y/m/d', $request->query('end'))
                 ->endOfDay()
                 ->shiftTimezone('UTC')
                 ->timestamp;
@@ -28,16 +30,19 @@ class UserController extends Controller
 
         //search for a user by their id
         $user = worksnapUser::find($id);
+        //projects associated with a user
+        $projects = $user->projects;
 
         if ($user) {
-            $perPage = 10;
             //search for timings associated with a user between 2 dates
-            $timmings = $user->timmings()
-                ->whereBetween('from_timestamp', [$startDate, $endDate])
-                ->where('user_id', $id)
-                //Add start and end parameters to pagination links to maintain these filters during page navigation.
-                ->with('project')
-                ->get();
+            $query = $user->timmings()
+                ->whereBetween('from_timestamp', [$startDate, $endDate]);
+
+            if ($projectId) {
+                $query->where('project_id', $projectId);
+            }
+
+            $timmings = $query->with('project')->get();
 
             $timmingsByDay = $timmings->groupBy(function($item) {
                 return Carbon::createFromTimestamp($item->from_timestamp)->format('Y-m-d');
@@ -59,19 +64,13 @@ class UserController extends Controller
                 ];
             });
 
-            CarbonInterval::setCascadeFactors([
-                'minute' => [60, 'seconds'],
-                'hour' => [60, 'minutes'],
-                // in this example the cascade won't go farther than week unit
-            ]);
-
-            //totalizations
+            //totalizations of hours and activity lvel
             $totalTime = $timmingsByDay->sum('total_seconds');
             $overallAverageActivityLevel = $timmings->avg('activity_level');
             //Convert seconds in hours and apply format (h:i)
             $totalTime = $this->convertSecondsInHours($totalTime);
 
-            return view('users.show', compact('user', 'timmingsByDay', 'overallAverageActivityLevel', 'totalTime'));
+            return view('users.show', compact('user', 'timmingsByDay', 'overallAverageActivityLevel', 'totalTime', 'projects'));
         } else {
             // Handle user not found scenario
             return abort(404);
