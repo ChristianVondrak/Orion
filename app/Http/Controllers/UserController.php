@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\worksnapUser;
 use Carbon\Carbon;
+use Carbon\CarbonInterval;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -58,10 +59,34 @@ class UserController extends Controller
                 ];
             });
 
-            return view('users.show', compact('user', 'timmingsByDay'));
+            CarbonInterval::setCascadeFactors([
+                'minute' => [60, 'seconds'],
+                'hour' => [60, 'minutes'],
+                // in this example the cascade won't go farther than week unit
+            ]);
+
+            //totalizations
+            $totalTime = $timmingsByDay->sum('total_seconds');
+            $overallAverageActivityLevel = $timmings->avg('activity_level');
+            //Convert seconds in hours and apply format (h:i)
+            $totalTime = $this->convertSecondsInHours($totalTime);
+
+            return view('users.show', compact('user', 'timmingsByDay', 'overallAverageActivityLevel', 'totalTime'));
         } else {
             // Handle user not found scenario
             return abort(404);
         }
+    }
+
+    public function convertSecondsInHours($seconds)
+    {
+        CarbonInterval::setCascadeFactors([
+            'minute' => [60, 'seconds'],
+            'hour' => [60, 'minutes'],
+            // in this example the cascade won't go farther than week unit
+        ]);
+
+        $totalTimeInterval = CarbonInterval::seconds($seconds)->cascade();
+        return $totalTimeInterval->format('%H:%I');
     }
 }

@@ -56,10 +56,6 @@
                     </th>
                     <th
                         class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                        Total Hours
-                    </th>
-                    <th
-                        class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
                         Project
                     </th>
                     <th
@@ -70,6 +66,10 @@
                         class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
                         Activity Level
                     </th>
+                    <th
+                        class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                        Total Hours
+                    </th>
                 </tr>
                 </thead>
 
@@ -78,9 +78,6 @@
                     <tr>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                                 {{$date }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            {{ gmdate('H:i', $data['total_seconds']) }} Hours
                         </td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                             @foreach ($data['projects'] as $project)
@@ -95,9 +92,18 @@
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-left">
                             {{ round($data['average_activity_level'], 2)*10 }}%
                         </td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            {{ gmdate('H:i', $data['total_seconds']) }} Hours
+                        </td>
                     </tr>
                 @endforeach
                 </tbody>
+                <tr>
+                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><strong>Total</strong></td>
+                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200" colspan="2"></td>
+                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><strong>{{ round($overallAverageActivityLevel, 2)*10 }}%</strong></td>
+                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"> <strong>{{$totalTime}} Hours</strong></td>
+                </tr>
             </table>
         </div>
     </div>
