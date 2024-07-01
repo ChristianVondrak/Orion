@@ -74,22 +74,26 @@
                 </thead>
 
                 <tbody class="bg-white">
-                @foreach ($timmingsByDay as $date => $totalSeconds)
+                @foreach ($timmingsByDay as $date => $data)
                     <tr>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                                 {{$date }}
                         </td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            {{ gmdate('H:i', $totalSeconds) }} Hours
+                            {{ gmdate('H:i', $data['total_seconds']) }} Hours
                         </td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            Avanti way
+                            @foreach ($data['projects'] as $project)
+                                {{ $project->name }}@if (!$loop->last) - @endif
+                            @endforeach
                         </td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            CRM
+                            @foreach ($data['task_names'] as $task_name)
+                                {{ $task_name }}@if (!$loop->last) - @endif
+                            @endforeach
                         </td>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-center">
-                            10
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-left">
+                            {{ round($data['average_activity_level'], 2)*10 }}%
                         </td>
                     </tr>
                 @endforeach

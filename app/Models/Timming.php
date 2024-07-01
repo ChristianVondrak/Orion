@@ -26,7 +26,7 @@ class Timming extends Model
      *
      * @return BelongsTo
      */
-    public function Project(): BelongsTo
+    public function project(): BelongsTo
     {
         return $this->BelongsTo(Project::class);
     }

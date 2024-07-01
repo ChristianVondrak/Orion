@@ -35,16 +35,30 @@ class UserController extends Controller
                 ->whereBetween('from_timestamp', [$startDate, $endDate])
                 ->where('user_id', $id)
                 //Add start and end parameters to pagination links to maintain these filters during page navigation.
+                ->with('project')
                 ->get();
 
-            // Agrupar los timmings por día y sumar los tiempos
             $timmingsByDay = $timmings->groupBy(function($item) {
                 return Carbon::createFromTimestamp($item->from_timestamp)->format('Y-m-d');
             })->map(function($dayGroup) {
-                return $dayGroup->count() * 10 * 60; // 10 minutos en segundos
+                // 10 minutes in seconds
+                $totalSeconds = $dayGroup->count() * 10 * 60;
+                // projects associated at daily timing
+                $projects = $dayGroup->pluck('project')->unique('id');
+                // task associated at daily timing
+                $taskNames = $dayGroup->pluck('task_name')->unique();
+                // avg of activity level of the day
+                $averageActivityLevel = $dayGroup->avg('activity_level');
+
+                return [
+                    'total_seconds' => $totalSeconds,
+                    'projects' => $projects,
+                    'task_names' => $taskNames,
+                    'average_activity_level' => $averageActivityLevel,
+                ];
             });
 
-            return view('users.show', compact('user', 'timmings', 'timmingsByDay'));
+            return view('users.show', compact('user', 'timmingsByDay'));
         } else {
             // Handle user not found scenario
             return abort(404);
