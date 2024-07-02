@@ -17,7 +17,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle project selection
     document.querySelectorAll('.dropdown-project-item').forEach(item => {
         item.addEventListener('click', function(event) {
-            event.preventDefault(); // Prevent default link behavior
+            // Prevent default link behavior
+            event.preventDefault();
             const projectId = this.getAttribute('data-project-id');
 
             // Set the hidden input value and submit the form

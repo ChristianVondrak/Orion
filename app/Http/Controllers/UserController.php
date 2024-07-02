@@ -10,9 +10,16 @@ use Illuminate\Http\Request;
 class UserController extends Controller
 {
     public function show(Request $request, $id){
+        //search for a user by their id
+        $user = worksnapUser::find($id);
+
+        //projects associated with a user
+        $projects = $user->projects;
+
         // variables to filter between 2 dates
         $startDate = Carbon::now()->startOfWeek()->shiftTimezone('UTC')->timestamp;
         $endDate = Carbon::now()->endOfWeek()->shiftTimezone('UTC')->timestamp;
+
         // ProjectId in case of filter per project
         $projectId = $request->query('project_id');
 
@@ -28,16 +35,11 @@ class UserController extends Controller
                 ->timestamp;
         }
 
-        //search for a user by their id
-        $user = worksnapUser::find($id);
-        //projects associated with a user
-        $projects = $user->projects;
-
         if ($user) {
             //search for timings associated with a user between 2 dates
             $query = $user->timmings()
                 ->whereBetween('from_timestamp', [$startDate, $endDate]);
-
+            //if project filter exist
             if ($projectId) {
                 $query->where('project_id', $projectId);
             }
