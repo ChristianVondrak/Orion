@@ -44,3 +44,14 @@ $("#kt_daterangepicker_4").daterangepicker({
     $("#start").val(start.format('YYYY/MM/DD'));
     $("#end").val(end.format('YYYY/MM/DD'));
 });
+
+$("form").on("submit", function(event) {
+    // Verificar si los campos start y end están vacíos
+    if (!$("#start").val() || !$("#end").val()) {
+        // Asignar inicio de mes y final de mes
+        var defaultStart = moment().startOf("month").format('YYYY/MM/DD');
+        var defaultEnd = moment().endOf("month").format('YYYY/MM/DD');
+        $("#start").val(defaultStart);
+        $("#end").val(defaultEnd);
+    }
+});

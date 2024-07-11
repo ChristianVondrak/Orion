@@ -54,7 +54,7 @@
 
         <!-- Right content -- Datepicker -->
         <div class="flex-initial">
-            <form action="{{route('user.show',['id'=>$user->id])}}" method="GET">
+            <form id="datepicker-form" {{route('user.show',['id'=>$user->id])}}" method="GET">
                 <div class="flex  items-center justify-end  lg:mx-20 mx-4 md:mx-10">
                     <input type="hidden" name="end" id="end" />
                     <input type="hidden" name="start" id="start" />
