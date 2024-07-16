@@ -15,7 +15,7 @@ var urlEnd = getParameterByName('end');
 
 // Comprobar si existen los parámetros en la URL
 if (urlStart && urlEnd) {
-    // Si existen, asignar los valores de la URL 
+    // Si existen, asignar los valores de la URL
     start = moment(urlStart, "YYYY/MM/DD");
     end = moment(urlEnd, "YYYY/MM/DD");
 }  else {
@@ -43,4 +43,15 @@ $("#kt_daterangepicker_4").daterangepicker({
     // Asignar valor al input para que reciba en controlador
     $("#start").val(start.format('YYYY/MM/DD'));
     $("#end").val(end.format('YYYY/MM/DD'));
+});
+
+$("form").on("submit", function(event) {
+    // Verificar si los campos start y end están vacíos
+    if (!$("#start").val() || !$("#end").val()) {
+        // Asignar inicio de mes y final de mes
+        var defaultStart = moment().startOf("month").format('YYYY/MM/DD');
+        var defaultEnd = moment().endOf("month").format('YYYY/MM/DD');
+        $("#start").val(defaultStart);
+        $("#end").val(defaultEnd);
+    }
 });

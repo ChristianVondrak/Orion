@@ -23,8 +23,8 @@
             </div>
         </div>
 
+        <!-- Right content div -->
         <div class="flex-initial">
-            <!-- Contenido del div de la derecha -->
             <form action="{{route('project.show',['id'=>$project->id])}}" method="GET">
                 <div class="flex  items-center justify-end  lg:mx-20 mx-4 md:mx-10">
                     <input type="hidden" name="end" id="end" />
@@ -72,7 +72,7 @@
                         @endphp
                     <tr>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <a href="#" class="text-indigo-600 hover:text-indigo-900">
+                            <a href="{{route('user.show',['id'=>$user->id])}}" class="text-indigo-600 hover:text-indigo-900">
                                 {{$user->first_name }} {{$user->last_name}}
                             </a>
                         </td>

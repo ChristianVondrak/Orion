@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Carbon\Carbon;
 
 class Timming extends Model
 {
@@ -25,8 +27,21 @@ class Timming extends Model
      *
      * @return BelongsTo
      */
-    public function Project(): BelongsTo
+    public function project(): BelongsTo
     {
         return $this->BelongsTo(Project::class);
+    }
+
+    /**
+     * Get the human-readable formatted time from the timestamp.
+     *
+     * @return string The formatted date and time.
+     */
+    public function getHumanTimeFromTimestampAttribute()
+    {
+        return  Carbon::createFromTimestamp(
+            $this->from_timestamp,
+            'America/Caracas')
+            ->format('d. F Y, g:i A');
     }
 }
