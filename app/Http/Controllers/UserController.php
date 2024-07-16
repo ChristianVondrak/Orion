@@ -17,8 +17,8 @@ class UserController extends Controller
         $projects = $user->projects;
 
         // variables to filter between 2 dates
-        $startDate = Carbon::now()->startOfWeek()->shiftTimezone('UTC')->timestamp;
-        $endDate = Carbon::now()->endOfWeek()->shiftTimezone('UTC')->timestamp;
+        $startDate = Carbon::now()->startOfMonth()->shiftTimezone('UTC')->timestamp;
+        $endDate = Carbon::now()->endOfMonth()->shiftTimezone('UTC')->timestamp;
 
         // ProjectId in case of filter per project
         $projectId = $request->query('project_id');
