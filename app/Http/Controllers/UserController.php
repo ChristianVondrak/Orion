@@ -29,6 +29,7 @@ class UserController extends Controller
                 ->startOfDay()
                 ->shiftTimezone('UTC')
                 ->timestamp;
+            
             $endDate = Carbon::createFromFormat('Y/m/d', $request->query('end'))
                 ->endOfDay()
                 ->shiftTimezone('UTC')
@@ -49,12 +50,16 @@ class UserController extends Controller
             $timmingsByDay = $timmings->groupBy(function($item) {
                 return Carbon::createFromTimestamp($item->from_timestamp)->format('Y-m-d');
             })->map(function($dayGroup) {
+
                 // 10 minutes in seconds
                 $totalSeconds = $dayGroup->count() * 10 * 60;
+
                 // projects associated at daily timing
                 $projects = $dayGroup->pluck('project')->unique('id');
+
                 // task associated at daily timing
                 $taskNames = $dayGroup->pluck('task_name')->unique();
+
                 // avg of activity level of the day
                 $averageActivityLevel = $dayGroup->avg('activity_level');
 
@@ -69,6 +74,7 @@ class UserController extends Controller
             //totalizations of hours and activity lvel
             $totalTime = $timmingsByDay->sum('total_seconds');
             $overallAverageActivityLevel = $timmings->avg('activity_level');
+
             //Convert seconds in hours and apply format (h:i)
             $totalTime = $this->convertSecondsInHours($totalTime);
 
@@ -79,6 +85,13 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Converts a given number of seconds into a formatted string representing hours and minutes.
+     *
+     * @param int $seconds The total number of seconds to be converted.
+     *
+     * @return string The formatted time interval as a string in the format "HH:MM".
+     */
     public function convertSecondsInHours($seconds)
     {
         CarbonInterval::setCascadeFactors([
