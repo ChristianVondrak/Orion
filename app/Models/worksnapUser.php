@@ -55,7 +55,7 @@ class worksnapUser extends Model
     /**
      * Calculate worked time of a user in hours per project.
      *
-     *
+     * @return float
      */
     public function getTimingsCountInHoursAttribute()
     {

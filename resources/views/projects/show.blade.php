@@ -93,7 +93,7 @@
                         {{--Remaining Hours--}}
                         @if($MonthHoursGoal - $user->timings_count_in_hours > 0)
                             <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                                {{round($MonthHoursGoal - $user->timings_count_in_hours),2}} H
+                                {{round($MonthHoursGoal - $user->timings_count_in_hours, 2)}} H
                             </td>
                         @else
                             <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
