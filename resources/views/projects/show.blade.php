@@ -76,7 +76,7 @@
                                 {{$user->first_name }} {{$user->last_name}}
                             </a>
                         </td>
-                        {{-- timmings            --}}
+                        {{-- timmings --}}
                         @if ($user->timings_count_in_hours < $MonthHoursGoal - $DayHours)
                             <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-red-600">
                                 {{$user->timings_count_in_hours}} H
@@ -90,9 +90,17 @@
                                 {{$user->timings_count_in_hours}} H
                             </td>
                         @endif
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            {{$MonthHoursGoal - $user->timings_count_in_hours}} H
-                        </td>
+                        {{--Remaining Hours--}}
+                        @if($MonthHoursGoal - $user->timings_count_in_hours > 0)
+                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                                {{round($MonthHoursGoal - $user->timings_count_in_hours),2}} H
+                            </td>
+                        @else
+                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                                0 H
+                            </td>
+                        @endif
+
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                             {{$user->totalProfits($user->timings_count_in_hours,$projectUser->hourly_rate)}}$
                         </td>
