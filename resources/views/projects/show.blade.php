@@ -57,7 +57,7 @@
                             Total Hours
                         </th>
                         <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                            Rating
+                            Remaining Hours
                         </th>
                         <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
                             Total profits
@@ -77,11 +77,21 @@
                             </a>
                         </td>
                         {{-- timmings            --}}
+                        @if ($user->timings_count_in_hours < $MonthHoursGoal - $DayHours)
+                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-red-600">
+                                {{$user->timings_count_in_hours}} H
+                            </td>
+                        @elseif ($user->timings_count_in_hours < $MonthHoursGoal)
+                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-yellow-600">
+                                {{$user->timings_count_in_hours}} H
+                            </td>
+                        @else
+                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-green-600">
+                                {{$user->timings_count_in_hours}} H
+                            </td>
+                        @endif
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            {{$user->timings_count_in_hours}}
-                        </td>
-                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            {{$projectUser->hourly_rate}} $
+                            {{$MonthHoursGoal - $user->timings_count_in_hours}} H
                         </td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                             {{$user->totalProfits($user->timings_count_in_hours,$projectUser->hourly_rate)}}$

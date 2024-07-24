@@ -31,6 +31,9 @@ class ProjectController extends Controller
             $query->whereBetween('from_timestamp', [$startDate, $endDate]);
         }])->find($id);
 
-        return view('projects.show', compact('project', 'startDate', 'endDate'));
+        $MonthHoursGoal = Project::MONTH_HOURS_GOAL_VZLA;
+        $DayHours = Project::DAY_HOURS;
+
+        return view('projects.show', compact('project', 'startDate', 'endDate', 'MonthHoursGoal', 'DayHours'));
     }
 }
