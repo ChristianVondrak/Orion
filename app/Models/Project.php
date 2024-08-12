@@ -11,6 +11,8 @@ class Project extends Model
 {
     use HasFactory;
 
+    const MONTH_HOURS_GOAL_VZLA = 160;
+    const DAY_HOURS = 8;
     /**
      * Defines a many-to-many relationship with worksnapUser.
      *

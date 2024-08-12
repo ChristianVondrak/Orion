@@ -55,17 +55,12 @@ class worksnapUser extends Model
     /**
      * Calculate worked time of a user in hours per project.
      *
-     * @return CarbonInterval
+     * @return float
      */
     public function getTimingsCountInHoursAttribute()
     {
-        CarbonInterval::setCascadeFactors([
-            'minute' => [60, 'seconds'],
-            'hour' => [60, 'minutes']
-        ]);
-
         $minutes = $this->timmings->count();
-        return CarbonInterval::minutes($minutes*10)->cascade();
+        return round(CarbonInterval::minutes($minutes*10)->total('hours'),2);
     }
 
     /**
@@ -77,7 +72,6 @@ class worksnapUser extends Model
      */
     public function totalProfits($hours,$rate): float
     {
-        $hours= $hours->totalHours;
         return (round($hours*$rate,2));
     }
 }
