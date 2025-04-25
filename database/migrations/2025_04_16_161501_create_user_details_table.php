@@ -14,11 +14,12 @@ return new class extends Migration
         Schema::create('user_details', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained(table: 'worksnap_users');
-            $table->string('country');
-            $table->string('phone');
-            $table->string('position');
-            $table->enum('gender', ['male', 'female', 'other']);
-            $table->enum('marital_status', ['single', 'married', 'divorced', 'widowed']);
+            $table->string('country')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('position')->nullable();
+            $table->enum('gender', ['male', 'female', 'other'])->nullable();
+            $table->enum('marital_status', ['single', 'married', 'divorced', 'widowed'])->nullable();
+            $table->date('date_of_birth')->nullable();
             $table->timestamps();
         });
     }

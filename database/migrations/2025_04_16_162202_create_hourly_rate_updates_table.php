@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained(table: 'worksnap_users');
             $table->decimal('previous_rate', 8, 2);
             $table->decimal('new_rate', 8, 2);
-            $table->date('updated_at');
             $table->timestamps();
         });
     }
