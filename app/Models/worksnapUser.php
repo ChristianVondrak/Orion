@@ -39,6 +39,11 @@ class worksnapUser extends Model
         return $this->hasMany(Timming::class,'user_id', 'id');
     }
 
+    public function detail()
+    {
+        return $this->hasOne(UserDetail::class, 'user_id');
+    }
+
     /**
      * Get the related ProjectUser models.
      *

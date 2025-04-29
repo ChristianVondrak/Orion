@@ -2,26 +2,178 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+@php use App\Enums\Country; @endphp
 
 <x-app-layout>
     <x-slot name="header">
+        {{-- Breadcrumbs --}}
+        <nav class="text-sm text-gray-500 mb-1" aria-label="Breadcrumb">
+            <ol class="list-none p-0 inline-flex">
+                <li class="flex items-center">
+                    <a href="{{ route('home.index') }}" class="hover:underline">Home</a>
+                    <span class="mx-2">/</span>
+                </li>
+                <li class="flex items-center">
+                    <a href="{{ route('user.index') }}" class="hover:underline">Users</a>
+                    <span class="mx-2">/</span>
+                </li>
+                <li class="flex items-center text-gray-700">
+                    User Detail
+                </li>
+            </ol>
+        </nav>
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('User Detail') }}
         </h2>
     </x-slot>
 
-    <div class="flex justify-between items-center">
-        <!-- Left content -- user data -->
-        <div class="flex-initial">
-            <div class="flex flex-col justify-center items-start lg:mx-20 mx-4 md:mx-10 pt-12 pb-6">
+    <div class="mt-6 lg:mx-20 mx-4 md:mx-10">
+
+        {{-- Alerts --}}
+        @if(session('success'))
+            <x-alert type="success" :message="session('success')" duration="4000" />
+        @endif
+        @if(session('error'))
+            <x-alert type="error" :message="session('error')" duration="4000" />
+        @endif
+
+        {{-- User Info Card --}}
+        <div class="bg-white p-6 rounded shadow flex justify-between items-center">
+            <div>
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     {{ $user->first_name }} {{ $user->last_name }}
                 </h2>
                 <p class="my-4 text-lg text-gray-500">
-                    {{$user->email}}</p>
+                    {{ $user->email }}
+                </p>
             </div>
+            <button id="toggle-detail-form"
+                    class="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                {{ $user->detail ? 'Edit Details' : 'Add Details' }}
+            </button>
         </div>
 
+        {{-- UserDetails Form --}}
+        <div id="detail-form" class="hidden bg-white p-6 rounded shadow mb-6">
+            <form action="{{ $user->detail
+                          ? route('user.details.update', $user->id)
+                          : route('user.details.store',  $user->id) }}"
+                  method="POST">
+                @csrf
+                @if($user->detail) @method('PUT') @endif
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium">Country</label>
+                        <select name="country"
+                                class="mt-1 block w-full border rounded p-2">
+                            <option value="" disabled {{ old('country', $user->detail->country ?? '') === null ? 'selected' : '' }}>
+                                — select country —
+                            </option>
+                            @foreach(Country::cases() as $c)
+                                <option value="{{ $c->value }}"
+                                    {{ old('country', $user->detail->country ?? '') === $c->value ? 'selected' : '' }}>
+                                    {{ $c->value }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('country')
+                        <p class="mt-1 text-red-600 text-sm">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Phone</label>
+                        <input name="phone" type="text"
+                               value="{{ old('phone', $user->detail->phone ?? '') }}"
+                               class="mt-1 block w-full border rounded p-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Position</label>
+                        <input name="position" type="text"
+                               value="{{ old('position', $user->detail->position ?? '') }}"
+                               class="mt-1 block w-full border rounded p-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Gender</label>
+                        <select name="gender"
+                                class="mt-1 block w-full border rounded p-2">
+                            <option value="" disabled {{ isset($user->detail) ? '' : 'selected' }}>
+                                — select —
+                            </option>
+                            @foreach(['male'=>'Male','female'=>'Female','other'=>'Other'] as $val => $label)
+                                <option value="{{ $val }}"
+                                    {{ old('gender', $user->detail->gender ?? '') === $val ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Marital Status</label>
+                        <select name="marital_status"
+                                class="mt-1 block w-full border rounded p-2">
+                            <option value="" disabled {{ isset($user->detail) ? '' : 'selected' }}>
+                                — select —
+                            </option>
+                            @foreach([
+                                'single'=>'Single',
+                                'married'=>'Married',
+                                'divorced'=>'Divorced',
+                                'widowed'=>'Widowed'
+                            ] as $val => $label)
+                                <option value="{{ $val }}"
+                                    {{ old('marital_status', $user->detail->marital_status ?? '') === $val ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Date of Birth</label>
+                        <input name="date_of_birth" type="date"
+                               value="{{ old('date_of_birth', optional($user->detail)->date_of_birth) }}"
+                               class="mt-1 block w-full border rounded p-2" />
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <button type="submit"
+                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                        {{ $user->detail ? 'Update Details' : 'Save Details' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {{-- Mostrar detalles si existen --}}
+        @if($user->detail)
+            <div class="bg-white p-6 rounded shadow">
+                <h3 class="text-lg font-semibold mb-4">Additional Information</h3>
+                <div class="flex flex-wrap -mx-3">
+                    <div class="px-3 w-full sm:w-1/2 lg:w-1/3 mb-4">
+                        <p><strong>Country:</strong> {{ $user->detail->country }}</p>
+                    </div>
+                    <div class="px-3 w-full sm:w-1/2 lg:w-1/3 mb-4">
+                        <p><strong>Phone:</strong> {{ $user->detail->phone }}</p>
+                    </div>
+                    <div class="px-3 w-full sm:w-1/2 lg:w-1/3 mb-4">
+                        <p><strong>Position:</strong> {{ $user->detail->position }}</p>
+                    </div>
+                    <div class="px-3 w-full sm:w-1/2 lg:w-1/3 mb-4">
+                        <p><strong>Gender:</strong> {{ ucfirst($user->detail->gender) }}</p>
+                    </div>
+                    <div class="px-3 w-full sm:w-1/2 lg:w-1/3 mb-4">
+                        <p><strong>Marital Status:</strong> {{ ucfirst($user->detail->marital_status) }}</p>
+                    </div>
+                    <div class="px-3 w-full sm:w-1/2 lg:w-1/3 mb-4">
+                        <p><strong>Date of Birth:</strong> {{ $user->detail->date_of_birth }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+    </div>
+
+    <div class="flex justify-between items-center">
         {{--        Droprown project filter        --}}
         <div class="relative inline-block text-left lg:mx-20 mx-4 md:mx-10">
             <div>
@@ -33,7 +185,7 @@
                 </button>
             </div>
 
-            <div class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" id="dropdown-menu">
+            <div class="absolute z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" id="dropdown-menu">
                 <div class="py-1" role="none">
                     @foreach ($projects as $project)
                         <a href="#" class="dropdown-project-item block px-4 py-2 text-sm text-gray-700" role="menuitem" data-project-id="{{ $project->id }}">
@@ -143,3 +295,4 @@
 
 <script type="text/javascript" src="{{ asset('js/datepicker.js') }}"></script>
 <script type="text/javascript" src="{{ asset('js/dropdown.js') }}"></script>
+<script type="text/javascript" src="{{ asset('js/user-details.js') }}"></script>
