@@ -19,3 +19,4 @@ yarn-error.log
 /.vscode
 /docker/db_data
 /docker/entrypoint
+docker-compose.yml
