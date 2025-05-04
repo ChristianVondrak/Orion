@@ -23,8 +23,8 @@ Route::middleware([
         ->name('user.details.store');
     Route::put('/user/{user}/details',   [UserDetailController::class, 'update'])
         ->name('user.details.update');
-  
-      // Módulo de reportes
+
+    // Módulo de reportes
     Route::prefix('reports')->name('reports.')->group(function() {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::get('/login', [ReportController::class, 'loginReport'])->name('login');
@@ -35,4 +35,9 @@ Route::middleware([
         Route::get('/{type}/export', [ReportController::class, 'export'])->name('export');
     });
 
+    // Hourly Rate Update
+    Route::post(
+        '/user/{user}/hourly-rates',
+        [UserController::class, 'bulkUpdateHourlyRates']
+    )->name('user.rate.bulkUpdate');
 });

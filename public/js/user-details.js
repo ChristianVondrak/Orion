@@ -7,4 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
             detailForm.classList.toggle('hidden');
         });
     }
+
+    document.getElementById('toggle-rate-form').addEventListener('click', function() {
+        document.getElementById('rate-form').classList.toggle('hidden');
+    });
 });

@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HourlyRateUpdate;
+use App\Models\projectUser;
 use App\Models\worksnapUser;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -15,6 +18,10 @@ class UserController extends Controller
 
         //projects associated with a user
         $projects = $user->projects;
+
+        $projectUsers = projectUser::with('project')
+            ->where('user_id', $user->id)
+            ->get();
 
         // variables to filter between 2 dates
         $startDate = Carbon::now()->startOfMonth()->shiftTimezone('UTC')->timestamp;
@@ -29,7 +36,7 @@ class UserController extends Controller
                 ->startOfDay()
                 ->shiftTimezone('UTC')
                 ->timestamp;
-            
+
             $endDate = Carbon::createFromFormat('Y/m/d', $request->query('end'))
                 ->endOfDay()
                 ->shiftTimezone('UTC')
@@ -78,7 +85,13 @@ class UserController extends Controller
             //Convert seconds in hours and apply format (h:i)
             $totalTime = $this->convertSecondsInHours($totalTime);
 
-            return view('users.show', compact('user', 'timmingsByDay', 'overallAverageActivityLevel', 'totalTime', 'projects'));
+            return view('users.show',
+                compact('user',
+                'timmingsByDay',
+                'overallAverageActivityLevel',
+                'totalTime',
+                'projects',
+                'projectUsers'));
         } else {
             // Handle user not found scenario
             return abort(404);
@@ -102,5 +115,50 @@ class UserController extends Controller
 
         $totalTimeInterval = CarbonInterval::seconds($seconds)->cascade();
         return $totalTimeInterval->format('%H:%I');
+    }
+
+    /**
+    * Bulk update hourly rates for a user across their projects,
+    * recording each change in the hourly_rate_updates table.
+    *
+    * @param Request $request
+    * @param int $userId
+    * @return RedirectResponse
+    */
+    public function bulkUpdateHourlyRates(Request $request, int $userId)
+    {
+        $data = $request->validate([
+            'rates'   => ['required','array'],
+            'rates.*' => ['required','numeric','min:0'],
+        ]);
+
+        $projectUsers = projectUser::where('user_id', $userId)
+            ->whereIn('project_id', array_keys($data['rates']))
+            ->get();
+
+        if ($projectUsers->isEmpty()) {
+            return back()->with('error', 'No project assignments found for updates.');
+        }
+
+        $connection = $projectUsers->first()->getConnection();
+        $connection->transaction(function() use ($projectUsers, $data) {
+            foreach ($projectUsers as $pu) {
+                $newRate = $data['rates'][$pu->project_id];
+                if ($pu->hourly_rate != $newRate) {
+                    $previous = $pu->hourly_rate;
+
+                    $pu->hourly_rate = $newRate;
+                    $pu->save();
+
+                    HourlyRateUpdate::create([
+                        'user_id'       => $pu->user_id,
+                        'previous_rate' => $previous,
+                        'new_rate'      => $newRate,
+                    ]);
+                }
+            }
+        });
+
+        return back()->with('success', 'Hourly rates updated successfully.');
     }
 }
