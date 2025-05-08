@@ -12,6 +12,28 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    public function index(Request $request)
+    {
+        $search = $request->query('search');
+
+        $query = worksnapUser::query();
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name',  'like', "%{$search}%")
+                    ->orWhere('email',      'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->whereNotNull('email')
+            ->where('email', '<>', '')
+            ->orderBy('last_name')
+            ->paginate(15)
+            ->appends(['search' => $search]);
+
+        return view('users.index', compact('users', 'search'));
+    }
     public function show(Request $request, $id){
         //search for a user by their id
         $user = worksnapUser::find($id);
