@@ -13,7 +13,7 @@ services:
       - ~/.ssh:/home/application/.ssh:ro
       - ./docker/vhost.conf:/opt/docker/etc/nginx/vhost.conf
     environment:
-      - DB_URL=mysql://ppl_erp:secret@ppl-erp-db:3306/ppl_erp_db
+      - DB_URL=mysql://ppl_erp:secret@192.168.1.31:3306/ppl_erp_db
     ports:
       - "8299:80"
       - "8000:8000"

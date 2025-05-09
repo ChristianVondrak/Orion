@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\HourlyRateUpdate;
 use App\Models\worksnapUser;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -72,6 +73,68 @@ class Report
                 'email'          => $user->email,
                 'activity_index' => round(($user->activity_level_avg ?? 0) * 10, 2),
             ]);
+    }
+
+    /**
+     * Build the base query for hourly‐rate updates within a date range.
+     *
+     * @param  Carbon  $start  Inclusive start datetime
+     * @param  Carbon  $end    Inclusive end datetime
+     * @return Builder
+     */
+    protected function hourlyRateUpdatesQuery(Carbon $start, Carbon $end): Builder
+    {
+        return HourlyRateUpdate::query()
+            ->with('user')
+            ->whereBetween('created_at', [$start, $end]);
+    }
+
+    /**
+     * Get a paginated list of hourly‐rate updates for view.
+     *
+     * @param  Carbon  $start
+     * @param  Carbon  $end
+     * @param  int     $perPage
+     * @return LengthAwarePaginator  paginator of stdClass {name, updated_at, previous_rate, new_rate}
+     */
+    public function getHourlyRateUpdatesData(Carbon $start, Carbon $end, int $perPage = 15): LengthAwarePaginator
+    {
+        $paginator = $this->hourlyRateUpdatesQuery($start, $end)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        $paginator->getCollection()->transform(function(HourlyRateUpdate $u) {
+            return (object)[
+                'name'          => $u->user->first_name . ' ' . $u->user->last_name,
+                'updated_at'    => $u->created_at->format('Y/m/d H:i'),
+                'previous_rate' => $u->previous_rate,
+                'new_rate'      => $u->new_rate,
+            ];
+        });
+
+        return $paginator;
+    }
+
+    /**
+     * Get all hourly‐rate updates for export (no pagination).
+     *
+     * @param  Carbon  $start
+     * @param  Carbon  $end
+     * @return Collection  of stdClass {name, updated_at, previous_rate, new_rate}
+     */
+    public function getAllHourlyRateUpdatesData(Carbon $start, Carbon $end): Collection
+    {
+        return $this->hourlyRateUpdatesQuery($start, $end)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function(HourlyRateUpdate $u) {
+                return (object)[
+                    'name'          => $u->user->first_name . ' ' . $u->user->last_name,
+                    'updated_at'    => $u->created_at->format('Y/m/d H:i'),
+                    'previous_rate' => $u->previous_rate,
+                    'new_rate'      => $u->new_rate,
+                ];
+            });
     }
 }
 
