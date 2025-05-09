@@ -2,16 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\HourlyRateUpdatesExport;
 use App\Http\Requests\ActivityIndexReportRequest;
+use App\Models\HourlyRateUpdate;
 use App\Services\Report;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportController extends Controller
 {
@@ -56,7 +62,6 @@ class ReportController extends Controller
      *
      * @param Request $request
      * @param Report $reportService
-     *
      * @return Application|Factory|View|\Illuminate\Foundation\Application|Response|\Illuminate\View\View|BinaryFileResponse
      */
     public function activityIndex(Request $request, Report $reportService)
@@ -99,5 +104,66 @@ class ReportController extends Controller
             ->appends($request->only(['start','end']));
 
         return view('reports.activity', compact('rows','start','end'));
+    }
+
+    /**
+     * Display or export the Hourly Rate Updates report.
+     *
+     * @param Request $request
+     * @param Report $reportService
+     * @return Application|Factory|View|\Illuminate\Foundation\Application|Response|\Illuminate\View\View|BinaryFileResponse
+     */
+    public function rateUpdates(Request $request, Report $reportService)
+    {
+        // 1) Parse date range (default: current year)
+        $start = Carbon::now()->startOfYear();
+        $end   = Carbon::now()->endOfYear();
+
+        if ($request->filled('year')) {
+            $year = intval($request->year);
+            $start = Carbon::create($year, 1, 1)->startOfDay();
+            $end   = Carbon::create($year, 12, 31)->endOfDay();
+        }
+        if ($request->filled('start') && $request->filled('end')) {
+            try {
+                $start = Carbon::parse($request->start)->startOfDay();
+                $end   = Carbon::parse($request->end)->endOfDay();
+            } catch (\Exception $e) {
+                // ignore invalid, keep year-range
+            }
+        }
+
+        // 2) Export to Excel?
+        if ($request->query('export') === 'excel') {
+            $allRows = $reportService->getAllHourlyRateUpdatesData($start, $end);
+            return Excel::download(
+                new HourlyRateUpdatesExport($allRows->toArray()),
+                'hourly-rate-updates_'.$start->format('Ymd').'-'.$end->format('Ymd').'.xlsx'
+            );
+        }
+
+        // 3) Export to PDF?
+        if ($request->query('export') === 'pdf') {
+            $allRows = $reportService->getAllHourlyRateUpdatesData($start, $end);
+            $pdf = Pdf::loadView('reports.rate_updates_pdf', [
+                'rows'  => $allRows,
+                'start' => $start->format('Y/m/d'),
+                'end'   => $end->format('Y/m/d'),
+            ])->setPaper('a4','landscape');
+
+            return $pdf->download('hourly-rate-updates_'.$start->format('Ymd').'-'.$end->format('Ymd').'.pdf');
+        }
+
+        // 4) Otherwise: paginate and render view
+        $rows = $reportService
+            ->getHourlyRateUpdatesData($start, $end, 15)
+            ->appends($request->only(['year','start','end']));
+
+        return view('reports.rate_updates', [
+            'rows'  => $rows,
+            'start' => $start->format('Y/m/d'),
+            'end'   => $end->format('Y/m/d'),
+            'year'  => $request->year ?? $start->year,
+        ]);
     }
 }
