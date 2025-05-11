@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\HourlyRateUpdatesExport;
+use App\Exports\NewHiresExport;
 use App\Http\Requests\ActivityIndexReportRequest;
 use App\Models\HourlyRateUpdate;
 use App\Services\Report;
@@ -37,7 +38,7 @@ class ReportController extends Controller
             [
                 'title' => 'Nuevos Ingresos',
                 'description' => 'Seguimiento de nuevos profesionales',
-                'route' => route('reports.newcomers'),
+                'route' => route('reports.newHires'),
             ],
             [
                 'title' => 'Actualizaciones de Tarifas',
@@ -164,6 +165,62 @@ class ReportController extends Controller
             'start' => $start->format('Y/m/d'),
             'end'   => $end->format('Y/m/d'),
             'year'  => $request->year ?? $start->year,
+        ]);
+    }
+
+    /**
+     * Show or export the “New Hires” report based on worksnapUser.created_at.
+     *
+     * @param Request $request
+     * @param Report $reportService
+     * @return Application|Factory|View|\Illuminate\Foundation\Application|Response|\Illuminate\View\View|BinaryFileResponse
+     */
+    public function newHires(Request $request, Report $reportService)
+    {
+        // Defaults: first and last day of current month
+        $start = Carbon::now()->startOfMonth();
+        $end   = Carbon::now()->endOfMonth();
+
+        // Override if valid range passed
+        if ($request->filled('start') && $request->filled('end')) {
+            try {
+                $start = Carbon::parse($request->start)->startOfDay();
+                $end   = Carbon::parse($request->end)->endOfDay();
+            } catch (\Exception $e) {
+                // keep defaults
+            }
+        }
+
+        // Excel export?
+        if ($request->query('export') === 'excel') {
+            $all = $reportService->getAllNewUsersData($start, $end);
+            return Excel::download(
+                new NewHiresExport($all->toArray()),
+                "new-hires_{$start->format('Ymd')}-{$end->format('Ymd')}.xlsx"
+            );
+        }
+
+        // PDF export?
+        if ($request->query('export') === 'pdf') {
+            $all = $reportService->getAllNewUsersData($start, $end);
+            $pdf = Pdf::loadView('reports.new_hires_pdf', [
+                'rows'  => $all,
+                'start' => $start->format('Y/m/d'),
+                'end'   => $end->format('Y/m/d'),
+            ])->setPaper('a4','landscape');
+
+            return $pdf->download("new-hires_{$start->format('Ymd')}-{$end->format('Ymd')}.pdf");
+        }
+
+        // Otherwise paginate & render
+        $rows = $reportService
+            ->getNewUsersData($start, $end, 15)
+            ->appends($request->only(['start','end']));
+
+        return view('reports.new_hires', [
+            'rows'  => $rows,
+            'start' => $start->format('Y/m/d'),
+            'end'   => $end->format('Y/m/d'),
         ]);
     }
 }

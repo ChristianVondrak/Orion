@@ -136,5 +136,73 @@ class Report
                 ];
             });
     }
+
+    /**
+     * Build the base query for users created between two dates.
+     *
+     * @param  Carbon  $start  Inclusive start datetime
+     * @param  Carbon  $end    Inclusive end datetime
+     * @return Builder
+     */
+    protected function usersByCreationDateQuery(Carbon $start, Carbon $end): Builder
+    {
+        return worksnapUser::query()
+            ->with('detail')
+            ->whereNotNull('email')
+            ->where('email', '<>', '')
+            ->whereBetween('created_at', [$start, $end]);
+    }
+
+    /**
+     * Get a paginated list of new users with:
+     *   - name
+     *   - country
+     *   - position
+     *   - start_date (created_at)
+     *
+     * @param  Carbon  $start
+     * @param  Carbon  $end
+     * @param  int     $perPage
+     * @return LengthAwarePaginator
+     */
+    public function getNewUsersData(Carbon $start, Carbon $end, int $perPage = 15): LengthAwarePaginator
+    {
+        $p = $this->usersByCreationDateQuery($start, $end)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        $p->getCollection()->transform(function(worksnapUser $u) {
+            return (object)[
+                'name'       => "{$u->first_name} {$u->last_name}",
+                'country'    => $u->detail->country  ?? '',
+                'position'   => $u->detail->position ?? '',
+                'start_date' => $u->created_at->format('Y/m/d'),
+            ];
+        });
+
+        return $p;
+    }
+
+    /**
+     * Get all new users (no pagination) formatted for export.
+     *
+     * @param  Carbon  $start
+     * @param  Carbon  $end
+     * @return Collection  of stdClass {name,country,position,start_date}
+     */
+    public function getAllNewUsersData(Carbon $start, Carbon $end): Collection
+    {
+        return $this->usersByCreationDateQuery($start, $end)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function(worksnapUser $u) {
+                return (object)[
+                    'name'       => "{$u->first_name} {$u->last_name}",
+                    'country'    => $u->detail->country  ?? '',
+                    'position'   => $u->detail->position ?? '',
+                    'start_date' => $u->created_at->format('Y/m/d'),
+                ];
+            });
+    }
 }
 
