@@ -29,7 +29,7 @@ Route::middleware([
         Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::get('/login', [ReportController::class, 'loginReport'])->name('login');
         Route::get('/activity', [ReportController::class, 'activityIndex'])->name('activity');
-        Route::get('/new-comers', [ReportController::class, 'newComers'])->name('newcomers');
+        Route::get('/new-hires', [ReportController::class, 'newHires'])->name('newHires');
         Route::get('/rate-updates', [ReportController::class, 'rateUpdates'])->name('rateupdates');
         // exportación
         Route::get('/{type}/export', [ReportController::class, 'export'])->name('export');
