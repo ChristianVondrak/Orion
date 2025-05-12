@@ -31,6 +31,7 @@ Route::middleware([
         Route::get('/activity', [ReportController::class, 'activityIndex'])->name('activity');
         Route::get('/new-hires', [ReportController::class, 'newHires'])->name('newHires');
         Route::get('/rate-updates', [ReportController::class, 'rateUpdates'])->name('rateupdates');
+        Route::get('/terminations', [ReportController::class, 'terminations'])->name('terminations');
         // exportación
         Route::get('/{type}/export', [ReportController::class, 'export'])->name('export');
     });
