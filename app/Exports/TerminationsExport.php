@@ -14,14 +14,27 @@ class TerminationsExport implements FromCollection, WithHeadings
     {
         return collect($this->rows)->map(fn($r) => [
             'Name'             => $r->name,
+            'Country'          => $r->country,
+            'Position'         => $r->position,
+            'Start Date'       => $r->start_date,
             'Termination Date' => $r->termination_date,
             'Reason'           => $r->reason,
+            'Tenure'           => $r->tenure,
         ]);
     }
 
     public function headings(): array
     {
-        return ['Name','Termination Date','Reason'];
+        return [
+            'Name',
+            'Country',
+            'Department',
+            'Position',
+            'Start Date',
+            'Termination Date',
+            'Reason',
+            'Tenure',
+            ];
     }
 }
 

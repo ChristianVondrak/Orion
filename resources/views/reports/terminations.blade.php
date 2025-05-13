@@ -52,7 +52,6 @@
                 <tr class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <th class="px-6 py-3">Name</th>
                     <th class="px-6 py-3">Country</th>
-                    <th class="px-6 py-3">Department</th>
                     <th class="px-6 py-3">Position</th>
                     <th class="px-6 py-3">Start Date</th>
                     <th class="px-6 py-3">Termination Date</th>
@@ -65,7 +64,6 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">{{ $r->name }}</td>
                         <td class="px-6 py-4">{{ $r->country }}</td>
-                        <td class="px-6 py-4">{{ $r->department }}</td>
                         <td class="px-6 py-4">{{ $r->position }}</td>
                         <td class="px-6 py-4">{{ $r->start_date }}</td>
                         <td class="px-6 py-4">{{ $r->termination_date }}</td>
