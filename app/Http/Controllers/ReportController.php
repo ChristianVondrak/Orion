@@ -45,6 +45,11 @@ class ReportController extends Controller
                 'description' => 'Cambios en el hourly rate',
                 'route' => route('reports.rateupdates'),
             ],
+            [
+                'title' => 'Destitucion de profesionales independientes',
+                'description' => 'Seguimiento de los profesionales independientes',
+                'route' => route('reports.terminations'),
+            ],
         ];
 
         return view('reports.index', compact('reports'));
@@ -222,5 +227,42 @@ class ReportController extends Controller
             'start' => $start->format('Y/m/d'),
             'end'   => $end->format('Y/m/d'),
         ]);
+    }
+
+    public function terminations(Request $request, Report $reportService)
+    {
+        // Defaults: first and last day of current month
+        $start = Carbon::now()->startOfMonth();
+        $end   = Carbon::now()->endOfMonth();
+
+        // Override if valid range passed
+        if ($request->filled('start') && $request->filled('end')) {
+            try {
+                $start = Carbon::parse($request->start)->startOfDay();
+                $end   = Carbon::parse($request->end)->endOfDay();
+            } catch (\Exception $e) {
+                // keep defaults
+            }
+        }
+
+        if ($request->export==='excel') {
+            $all = $reportService->getAllTerminationsData($start,$end);
+            return \Maatwebsite\Excel\Facades\Excel::download(
+                new \App\Exports\TerminationsExport($all->toArray()),
+                "terminations_{$start->format('Ymd')}-{$end->format('Ymd')}.xlsx"
+            );
+        }
+        if ($request->export==='pdf') {
+            $all = $reportService->getAllTerminationsData($start,$end);
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.terminations_pdf', [
+                'rows'=>$all,'start'=>$start->format('Y/m/d'),'end'=>$end->format('Y/m/d'),
+            ])->setPaper('a4','landscape');
+            return $pdf->download("terminations_{$start->format('Ymd')}-{$end->format('Ymd')}.pdf");
+        }
+
+        $rows = $reportService->getTerminationsData($start,$end,15)
+            ->appends($request->only(['start','end']));
+
+        return view('reports.terminations', compact('rows','start','end'));
     }
 }

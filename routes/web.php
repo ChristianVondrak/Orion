@@ -3,6 +3,7 @@
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserDetailController;
+use App\Http\Controllers\UserTerminationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProjectController;
@@ -24,6 +25,10 @@ Route::middleware([
     Route::put('/user/{user}/details',   [UserDetailController::class, 'update'])
         ->name('user.details.update');
 
+    // Route to update user termination
+    Route::post('/user/{user}/termination', [UserTerminationController::class, 'store'])
+        ->name('user.termination.store');
+
     // Módulo de reportes
     Route::prefix('reports')->name('reports.')->group(function() {
         Route::get('/', [ReportController::class, 'index'])->name('index');
@@ -31,6 +36,7 @@ Route::middleware([
         Route::get('/activity', [ReportController::class, 'activityIndex'])->name('activity');
         Route::get('/new-hires', [ReportController::class, 'newHires'])->name('newHires');
         Route::get('/rate-updates', [ReportController::class, 'rateUpdates'])->name('rateupdates');
+        Route::get('/terminations', [ReportController::class, 'terminations'])->name('terminations');
         // exportación
         Route::get('/{type}/export', [ReportController::class, 'export'])->name('export');
     });

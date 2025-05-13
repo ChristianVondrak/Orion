@@ -59,6 +59,11 @@
                         class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
                     Update Hourly Rates
                 </button>
+
+                <button id="toggle-terminate-form"
+                        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                    Terminate Contract
+                </button>
             </div>
         </div>
 
@@ -153,6 +158,39 @@
                 </div>
             </form>
         </div>
+
+        <div id="terminate-form" class="hidden bg-gray-50 p-6 rounded mt-4 border border-gray-200">
+            <form action="{{ route('user.termination.store', $user->id) }}" method="POST">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium">Termination Date</label>
+                        <input name="termination_date" type="date"
+                               value="{{ old('termination_date') }}"
+                               class="mt-1 block w-full border rounded p-2" />
+                        @error('termination_date')
+                        <p class="mt-1 text-red-600 text-sm">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Reason</label>
+                        <input name="reason" type="text"
+                               value="{{ old('reason') }}"
+                               class="mt-1 block w-full border rounded p-2" />
+                        @error('reason')
+                        <p class="mt-1 text-red-600 text-sm">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                        Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+
 
         {{-- Formulario de actualización de tarifas --}}
         <div id="rate-form" class="hidden bg-gray-50 p-6 rounded mt-4 border border-gray-200">

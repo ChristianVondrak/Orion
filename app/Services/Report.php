@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\HourlyRateUpdate;
+use App\Models\UserTermination;
 use App\Models\worksnapUser;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -201,6 +202,82 @@ class Report
                     'country'    => $u->detail->country  ?? '',
                     'position'   => $u->detail->position ?? '',
                     'start_date' => $u->created_at->format('Y/m/d'),
+                ];
+            });
+    }
+
+    /**
+     * Get a paginated list of terminations including tenure.
+     *
+     * @param  Carbon  $start
+     * @param  Carbon  $end
+     * @param  int     $perPage
+     * @return LengthAwarePaginator  paginator of stdClass {
+     *     name, country, department, position,
+     *     start_date, termination_date, reason, tenure
+     * }
+     */
+    public function getTerminationsData(Carbon $start, Carbon $end, int $perPage = 15): LengthAwarePaginator
+    {
+        $p = UserTermination::with('user.detail')
+            ->whereBetween('termination_date', [$start->toDateString(), $end->toDateString()])
+            ->orderBy('termination_date','desc')
+            ->paginate($perPage);
+
+        $p->getCollection()->transform(function(UserTermination $t) {
+            $u       = $t->user;
+            $d       = $u->detail;
+            $hired   = $u->created_at;
+            $ended   = Carbon::parse($t->termination_date);
+            $interval= $hired->diff($ended);
+
+            return (object)[
+                'name'             => "{$u->first_name} {$u->last_name}",
+                'country'          => $d->country    ?? '',
+                'department'       => $d->department ?? '',
+                'position'         => $d->position   ?? '',
+                'start_date'       => $hired->format('Y/m/d'),
+                'termination_date' => $ended->format('Y/m/d'),
+                'reason'           => $t->reason,
+                'tenure'           => $interval->format('%y years, %m months'),
+            ];
+        });
+
+        return $p;
+    }
+
+    /**
+     * Get all terminations (no pagination) for export.
+     *
+     * @param  Carbon  $start
+     * @param  Carbon  $end
+     * @return Collection  of stdClass {
+     *     name, country, department, position,
+     *     start_date, termination_date, reason, tenure
+     * }
+     */
+    public function getAllTerminationsData(Carbon $start, Carbon $end): Collection
+    {
+        return UserTermination::with('user.detail')
+            ->whereBetween('termination_date', [$start->toDateString(), $end->toDateString()])
+            ->orderBy('termination_date','desc')
+            ->get()
+            ->map(function(UserTermination $t) {
+                $u       = $t->user;
+                $d       = $u->detail;
+                $hired   = $u->created_at;
+                $ended   = Carbon::parse($t->termination_date);
+                $interval= $hired->diff($ended);
+
+                return (object)[
+                    'name'             => "{$u->first_name} {$u->last_name}",
+                    'country'          => $d->country    ?? '',
+                    'department'       => $d->department ?? '',
+                    'position'         => $d->position   ?? '',
+                    'start_date'       => $hired->format('Y/m/d'),
+                    'termination_date' => $ended->format('Y/m/d'),
+                    'reason'           => $t->reason,
+                    'tenure'           => $interval->format('%y years, %m months'),
                 ];
             });
     }

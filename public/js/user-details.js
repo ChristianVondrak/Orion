@@ -11,4 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('toggle-rate-form').addEventListener('click', function() {
         document.getElementById('rate-form').classList.toggle('hidden');
     });
+
+    document.getElementById('toggle-terminate-form')
+        .addEventListener('click', () => {
+            document.getElementById('terminate-form').classList.toggle('hidden');
+        });
 });
