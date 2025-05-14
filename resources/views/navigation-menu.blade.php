@@ -77,6 +77,70 @@
                     </div>
                 @endif
 
+                <!-- Campana de notificaciones -->
+                @php
+                    $unread = Auth::user()->unreadNotifications;
+                    $count  = $unread->count();
+                @endphp
+                <div x-data="{ notifOpen: false }" class="ms-3 relative">
+                    <button @click="notifOpen = !notifOpen" class="relative p-2 rounded-full hover:bg-gray-100 focus:outline-none">
+                        <svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M15 17h5l-1.405-1.405A2 2 0 0118 14V11a6 6 0 10-12 0v3a2 2 0 01-.595 1.408L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        @if($count)
+                            <span class="absolute top-0 right-0 inline-flex items-center justify-center
+                                         px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600
+                                         rounded-full transform translate-x-1/2 -translate-y-1/2">
+                                {{ $count }}
+                            </span>
+                        @endif
+                    </button>
+
+                    <!-- Dropdown -->
+                    <div x-show="notifOpen" @click.away="notifOpen = false"
+                         class="origin-top-right absolute right-0 mt-2 w-96 bg-white border rounded shadow-lg z-50">
+                        <div class="max-h-64 overflow-y-auto">
+                            @forelse($unread as $note)
+                                <form method="POST" action="{{ route('notifications.markRead', $note->id) }}">
+                                    @csrf
+                                    <button type="submit"
+                                            class="w-full text-left px-4 py-2 hover:bg-gray-100">
+                                        {{-- Título genérico --}}
+                                        <div class="text-sm font-semibold text-gray-800">
+                                            {{ $note->data['title'] }}
+                                        </div>
+                                        {{-- Mensaje completo y saltos de línea --}}
+                                        <div class="text-sm text-gray-800 whitespace-normal">
+                                            {{ $note->data['message'] }}
+                                        </div>
+                                        {{-- Tiempo sin truncar --}}
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            {{ $note->created_at->diffForHumans() }}
+                                        </div>
+                                    </button>
+                                </form>
+                            @empty
+                                <div class="px-4 py-2 text-sm text-gray-500">
+                                    You have no new alerts.
+                                </div>
+                            @endforelse
+                        </div>
+
+                        @if($count)
+                            <div class="border-t">
+                                <form method="POST" action="{{ route('notifications.markAllRead') }}">
+                                    @csrf
+                                    <button type="submit"
+                                            class="w-full text-center text-sm text-gray-600 hover:bg-gray-50 px-4 py-2">
+                                        Mark all as read
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+                <!-- /Campana de notificaciones -->
+
                 <!-- Settings Dropdown -->
                 <div class="ms-3 relative">
                     <x-dropdown align="right" width="48">

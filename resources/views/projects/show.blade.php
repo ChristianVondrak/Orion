@@ -45,6 +45,31 @@
         </div>
     </div>
 
+    @php
+        $weekStart = today()->startOfWeek();
+        $default   = \App\Models\PlannedProjectHour::getForWeek($project->id, $weekStart);
+    @endphp
+
+    <div class="mb-6 p-4 bg-white rounded shadow">
+        <h3 class="font-semibold">Horas planificadas (semana {{ $weekStart->format('Y-m-d') }})</h3>
+        <form action="{{ route('projects.planned-hours.store', $project) }}" method="POST" class="flex items-end gap-4">
+            @csrf
+            <input type="hidden" name="week_start" value="{{ $weekStart->toDateString() }}">
+
+            <div>
+                <label class="block text-sm">Horas planificadas</label>
+                <input type="number" step="0.01" min="0" name="planned_hours"
+                       value="{{ old('planned_hours',$default) }}"
+                       class="border rounded p-2 w-24" />
+            </div>
+
+            <button type="submit"
+                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                Guardar
+            </button>
+        </form>
+    </div>
+
     <div class="pb-12 flex flex-col justify-center items-center lg:mx-20 mx-4 md:mx-10">
         <div class="align-middle inline-block min-w-full overflow-hidden sm:rounded-lg border-gray-200 shadow">
             <table class="table-fixed w-full">

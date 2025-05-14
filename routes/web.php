@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PlannedProjectHourController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserDetailController;
@@ -40,6 +42,14 @@ Route::middleware([
         // exportación
         Route::get('/{type}/export', [ReportController::class, 'export'])->name('export');
     });
+
+    // Alertas
+    Route::post('projects/{project}/planned-hours', [PlannedProjectHourController::class,'store'])
+        ->name('projects.planned-hours.store');
+    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])
+        ->name('notifications.markAllRead');
+    Route::post('notifications/{id}/mark-read', [NotificationController::class, 'markRead'])
+        ->name('notifications.markRead');
 
     // Hourly Rate Update
     Route::post(
