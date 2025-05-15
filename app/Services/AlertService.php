@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Models\worksnapUser;
 use App\Notifications\UserHourDeviationNotification;
+use App\Notifications\UserInactivityNotification;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\ProjectHourDeviationNotification;
 use Carbon\Carbon;
@@ -21,7 +22,7 @@ class AlertService
     public function checkProjectHourDeviation(): void
     {
         $start = Carbon::now()->subWeek()->startOfWeek();
-        $end   = Carbon::now()->subWeek()->endOfWeek();
+        $end = Carbon::now()->subWeek()->endOfWeek();
 
         // Obtener todos los administradores (usuarios cuyo role.name = 'Administrator')
         $admins = User::whereHas('role', fn($q) => $q->where('name', 'Administrator'))
@@ -55,6 +56,7 @@ class AlertService
             }
         }
     }
+
     /**
      * Check each professional’s weekly hours vs planned and notify admins
      * if the deviation exceeds 10%.
@@ -63,33 +65,26 @@ class AlertService
      */
     public function checkUserHourDeviation(): void
     {
-        $start     = Carbon::now()->subWeek()->startOfWeek();
-        $end       = Carbon::now()->subWeek()->endOfWeek();
+        $start = Carbon::now()->subWeek()->startOfWeek();
+        $end = Carbon::now()->subWeek()->endOfWeek();
         $weekStart = $start->toDateString();
 
-        // 1) Obtener administradores
         $admins = User::whereHas('role', fn($q) => $q->where('name', 'Administrator'))->get();
 
-        // 2) Traer usuarios con email válido,
-        //    con conteo de timmings y relación de plannedHours filtrada
         worksnapUser::whereNotNull('email')
             ->where('email', '<>', '')
             ->withCount([
-                // Cuenta sólo timmings entre $start y $end
-                'timmings as timmings_count' => function($q) use($start, $end) {
+                'timmings as timmings_count' => function ($q) use ($start, $end) {
                     $q->whereBetween('from_timestamp', [$start->timestamp, $end->timestamp]);
                 },
             ])
             ->with([
-                // Trae sólo el registro de planned_hours para esa semana
                 'plannedHours' => fn($q) => $q->where('week_start', $weekStart)
             ])
-            // Si tienes muchos usuarios, usa chunkById(100) para no colapsar memoria
-            ->chunkById(100, function($users) use($admins) {
+            ->chunkById(100, function ($users) use ($admins) {
                 foreach ($users as $worker) {
-                    // 3) Plan: si hay registro, usarlo; si no, default 5 días * 8 h = 40 h
                     $planRecord = $worker->plannedHours->first();
-                    $plan       = $planRecord
+                    $plan = $planRecord
                         ? (float)$planRecord->planned_hours
                         : 5 * 8.0;
 
@@ -97,10 +92,7 @@ class AlertService
                         continue;
                     }
 
-                    // 4) Actual en horas: timmings_count * 10 minutos → horas
                     $actual = round(($worker->timmings_count * 10) / 60, 2);
-
-                    // 5) Desviación %
                     $dev = round((($actual - $plan) / $plan) * 100, 2);
 
                     if (abs($dev) > 10) {
@@ -112,5 +104,32 @@ class AlertService
                 }
             });
     }
+
+    /**
+     * Comprueba inactividad de profesionales independientes.
+     * — Si no registran timmings en los últimos N días, alerta.
+     */
+    public function checkUserInactivity(): void
+    {
+        $days = config('alerts.inactivity_threshold_days', 3);
+        $cutoff = now()->subDays($days)->startOfDay()->timestamp;
+        $admins = User::whereHas('role', fn($q) => $q->where('name', 'Administrator'))->get();
+
+        worksnapUser::whereNotNull('email')
+            ->where('email', '<>', '')
+            ->withMax(['timmings as last_activity_ts' => fn($q) => $q], 'from_timestamp')
+            ->chunkById(100, function ($users) use ($cutoff, $days, $admins) {
+                foreach ($users as $worker) {
+                    $lastTs = $worker->last_activity_ts;
+                    if (!$lastTs || $lastTs < $cutoff) {
+                        Notification::send(
+                            $admins,
+                            new UserInactivityNotification($worker, $days)
+                        );
+                    }
+                }
+            });
+    }
+
 }
 

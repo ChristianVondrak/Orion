@@ -15,14 +15,15 @@ return function (Schedule $schedule): void {
         ->command('alerts:user-deviation')
         ->weeklyOn(1, '08:05')
         ->withoutOverlapping();
-    /*
-        // 3) Diario 09:00 → inactividad de usuarios (p.ej. sin timmings 3 días)
-        $schedule
-            ->command('alerts:user-inactivity')
-            ->dailyAt('09:00');
 
-        // 4) Diario 18:00 → rendimiento inusual de usuarios
-        $schedule
-            ->command('alerts:user-performance')
-            ->dailyAt('18:00');*/
+    // 3) Diario 09:00 → inactividad de usuarios (p.ej. sin timmings 3 días)
+    $schedule
+        ->command('alerts:user-inactivity')
+        ->dailyAt('09:00')
+        ->withoutOverlapping();
+    /*
+            // 4) Diario 18:00 → rendimiento inusual de usuarios
+            $schedule
+                ->command('alerts:user-performance')
+                ->dailyAt('18:00');*/
 };
