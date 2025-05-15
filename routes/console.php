@@ -21,9 +21,10 @@ return function (Schedule $schedule): void {
         ->command('alerts:user-inactivity')
         ->dailyAt('09:00')
         ->withoutOverlapping();
-    /*
-            // 4) Diario 18:00 → rendimiento inusual de usuarios
-            $schedule
-                ->command('alerts:user-performance')
-                ->dailyAt('18:00');*/
+
+    // 4) Diario 18:00 → rendimiento inusual de usuarios
+    $schedule
+        ->command('alerts:user-performance')
+        ->dailyAt('19:00')
+        ->withoutOverlapping();
 };
