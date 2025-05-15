@@ -5,10 +5,12 @@ namespace App\Services;
 use App\Models\PlannedProjectHour;
 use App\Models\PlannedUserHour;
 use App\Models\Project;
+use App\Models\Timming;
 use App\Models\User;
 use App\Models\worksnapUser;
 use App\Notifications\UserHourDeviationNotification;
 use App\Notifications\UserInactivityNotification;
+use App\Notifications\UserPerformanceNotification;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\ProjectHourDeviationNotification;
 use Carbon\Carbon;
@@ -131,5 +133,40 @@ class AlertService
             });
     }
 
+    public function checkUserPerformance(): void
+    {
+        $start = Carbon::yesterday()->startOfDay();
+        $end = Carbon::yesterday()->endOfDay();
+        $low = config('alerts.performance_low_threshold', 75);
+        $high = config('alerts.performance_high_threshold', 97);
+        $admins = User::whereHas('role', fn($q) => $q->where('name', 'Administrator'))->get();
+
+        worksnapUser::whereNotNull('email')
+            ->where('email', '<>', '')
+            ->chunkById(100, function ($users) use ($start, $end, $low, $high, $admins) {
+                foreach ($users as $worker) {
+                    // Agrupa sus timmings por proyecto SOLO de ese usuario
+                    $timmingsByProject = $worker
+                        ->timmings()
+                        ->whereBetween('from_timestamp', [$start->timestamp, $end->timestamp])
+                        ->with('project')
+                        ->get()
+                        ->groupBy('project_id');
+
+                    foreach ($timmingsByProject as $projectId => $group) {
+                        $project = $group->first()->project;
+                        if (!$project) continue;
+
+                        $percent = round($group->avg('activity_level') * 10, 2);
+                        if ($percent < $low || $percent > $high) {
+                            Notification::send(
+                                $admins,
+                                new UserPerformanceNotification($worker, $project, $percent)
+                            );
+                        }
+                    }
+                }
+            });
+    }
 }
 
