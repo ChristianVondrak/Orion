@@ -58,6 +58,10 @@ class worksnapUser extends Model
         return $this->hasMany(projectUser::class);
     }
 
+    public function plannedHours()
+    {
+        return $this->hasMany(PlannedUserHour::class, 'user_id');
+    }
     /**
      * Calculate worked time of a user in hours per project.
      *
