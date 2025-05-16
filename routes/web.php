@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlannedProjectHourController;
 use App\Http\Controllers\ReportController;
@@ -50,6 +51,14 @@ Route::middleware([
         ->name('notifications.markAllRead');
     Route::post('notifications/{id}/mark-read', [NotificationController::class, 'markRead'])
         ->name('notifications.markRead');
+
+    // Invoices
+    // Vista previa del corte
+    Route::get('project/{project}/invoices/preview', [InvoiceController::class,'preview'])
+        ->name('project.invoices.preview');
+    // Envío final de las facturas
+    Route::post('project/{project}/invoices/send', [InvoiceController::class,'send'])
+        ->name('project.invoices.send');
 
     // Hourly Rate Update
     Route::post(
