@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Database\factories\WorksnapUserFactory;
 
 class worksnapUser extends Model
 {
@@ -66,6 +67,11 @@ class worksnapUser extends Model
     {
         $minutes = $this->timmings->count();
         return round(CarbonInterval::minutes($minutes*10)->total('hours'),2);
+    }
+
+    protected static function newFactory()
+    {
+        return WorksnapUserFactory::new();
     }
 
     /**

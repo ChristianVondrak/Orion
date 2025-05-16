@@ -25,7 +25,7 @@ class projectUser extends Model
      *
      * @return BelongsTo
      */
-    public function worknapUser(): BelongsTo
+    public function worksnapUser(): BelongsTo
     {
         return $this->belongsTo(worksnapUser::class, 'user_id');
     }
