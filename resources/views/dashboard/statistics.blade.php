@@ -5,6 +5,9 @@
         </h2>
     </x-slot>
 
+    {{-- Meta CSRF para JavaScript --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <div class="py-12 px-4">
         <div class="bg-white shadow sm:rounded-lg p-6">
             <h3 class="text-lg font-medium text-gray-900 mb-6">HR Dashboard Statistics</h3>
@@ -53,8 +56,15 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Configura Axios para Sanctum
+        axios.defaults.withCredentials = true;
         axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+        axios.defaults.headers.common['X-CSRF-TOKEN'] =
+          document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        // Inicializa cookie de CSRF/Sanctum
+        await axios.get('/sanctum/csrf-cookie');
 
         // 1. Compensation Structure (Pie)
         axios.get('/api/statistics/compensation')
@@ -157,7 +167,7 @@
                     }
                 });
             });
-
     });
     </script>
 </x-app-layout>
+

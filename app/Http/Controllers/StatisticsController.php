@@ -29,7 +29,7 @@ class StatisticsController extends Controller
      */
     public function index()
     {
-        return view('statistics');
+        return view('dashboard.statistics');
     }
 
     /**
