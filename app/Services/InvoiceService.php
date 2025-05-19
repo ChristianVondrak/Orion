@@ -100,37 +100,39 @@ class InvoiceService
     public function sendInvoices(int $projectId, Carbon $cutoffDate, array $manuals): void
     {
         Log::info("sendInvoices arrancó — projectId={$projectId}, corte={$cutoffDate->toDateString()}");
-        $invoices = $this->getProjectInvoices($projectId, $cutoffDate);
+        $rawInvoices = $this->getProjectInvoices($projectId, $cutoffDate);
 
-        foreach ($invoices as $inv) {
+        // Mapeo para garantizar que existan todas las claves
+        $prepared = $rawInvoices->map(function(array $inv) use ($projectId, $manuals) {
             $userId = $inv['user']->id;
 
-            $inv['manual_adjustment'] = round($manuals[$userId] ?? 0, 2);
-            $inv['total'] = round(
-                $inv['subtotal']
-                + $inv['auto_adjustment']
-                + $inv['manual_adjustment'],
-                2);
+            $subtotal = $inv['subtotal'] ?? 0;
+            $auto     = $inv['auto_adjustment'] ?? 0;
+            $manual   = round($manuals[$userId] ?? 0, 2);
+            $total    = round($subtotal + $auto + $manual, 2);
 
-            if (app()->environment('local') && count($invoices) > 0) {
-                Log::info("ENTRO AL IF");
-                $inv = $invoices[0]; // único
-                try {
-                Mail::to('christianvondrak99@gmail.com')
-                    ->send(new InvoiceMail($inv));
-                    Log::info("InvoiceMail enviado para user_id={$inv['user']->id}");
-                } catch (\Exception $e) {
-                    // Lo registramos en el log y devolvemos algo para debug
-                    Log::error("Error enviando InvoiceMail a {$inv['user']->email}: ".$e->getMessage());
-                    // opcionalmente:
-                    throw $e;
-                }
+            return array_merge($inv, [
+                'project_id'        => $projectId,
+                'subtotal'          => $subtotal,
+                'auto_adjustment'   => $auto,
+                'manual_adjustment' => $manual,
+                'total'             => $total,
+                'daily'             => $inv['daily'] ?? [],
+            ]);
+        });
 
-                return;
-            }
-            //DESCOMENTAR CUANDO SE TERMINE LA PRESENTACION DE LA TESIS
-/*            Mail::to($inv['user']->email)
-                ->send(new InvoiceMail($inv));*/
+        // En local solo enviamos el primero para tu demo
+        if (app()->environment('local') && $prepared->isNotEmpty()) {
+            $inv = $prepared[2];
+            Log::info("InvoiceMail preparado: ".json_encode($inv));
+            Mail::to('christianvondrak99@gmail.com')->send(new InvoiceMail($inv));
+            Log::info("InvoiceMail enviado para user_id={$inv['user']->id}");
+            return;
         }
+
+        // En producción, uno por usuario:
+//        foreach ($prepared as $inv) {
+//            Mail::to($inv['user']->email)->send(new InvoiceMail($inv));
+//        }
     }
 }
