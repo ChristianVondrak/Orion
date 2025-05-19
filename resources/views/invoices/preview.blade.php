@@ -1,19 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Corte mensual:').' '.$project->name }}
             </h2>
-            <a href="{{ route('project.invoices.preview', $project->id) }}"
-               class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                {{ __('Recargar Vista') }}
-            </a>
-        </div>
     </x-slot>
 
-    <div class="max-w-7xl mx-auto mt-6">
+    <div class="max-w-3xl mx-auto mt-6">
 
-        {{-- BARRA DE BÚSQUEDA --}}
+        {{-- Búsqueda --}}
         <form class="mb-4 flex" method="GET"
               action="{{ route('project.invoices.preview', $project->id) }}">
             <input type="text"
@@ -30,8 +24,8 @@
         <form method="POST" action="{{ route('project.invoices.send', $project->id) }}">
             @csrf
 
-            {{-- GRID DE TARJETAS PAGINADAS --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {{-- GRID de 1 columna --}}
+            <div class="grid grid-cols-1 gap-6">
                 @foreach($invoices as $inv)
                     <div class="bg-white shadow rounded-lg overflow-hidden"
                          x-data="{ manual: 0 }">
@@ -43,6 +37,10 @@
                                     {{ $inv['user']->first_name.' '.$inv['user']->last_name }}
                                 </h3>
                                 <p class="text-sm text-gray-500">{{ $inv['period'] }}</p>
+                                <p class="text-sm">
+                                    <span class="font-medium">{{ __('Activity Index') }}:</span>
+                                    {{ $inv['activity_index'] }}%
+                                </p>
                             </div>
                             <div class="text-right space-y-1">
                                 <div class="text-sm text-gray-600">{{ __('Subtotal') }}:
@@ -57,9 +55,8 @@
                             </div>
                         </div>
 
-                        {{-- CUERPO--}}
+                        {{-- CUERPO DE AJUSTES --}}
                         <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {{-- Manual --}}
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">
                                     {{ __('Ajuste manual') }}
@@ -69,7 +66,7 @@
                                        x-model.number="manual"
                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"/>
                             </div>
-                            {{-- Total --}}
+                            {{-- Total dinámico --}}
                             <div class="text-right flex flex-col justify-end">
                                 <p class="text-sm text-gray-700">{{ __('Total estimado') }}</p>
                                 <p class="text-2xl font-bold text-indigo-600">
@@ -99,12 +96,12 @@
                 @endforeach
             </div>
 
-            {{-- LINKS DE PAGINACIÓN --}}
+            {{-- Paginación --}}
             <div class="mt-6">
                 {{ $invoices->links() }}
             </div>
 
-            {{-- BOTÓN DE ENVÍO --}}
+            {{-- Botón enviar --}}
             <div class="mt-8 flex justify-end">
                 <button type="submit"
                         class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700">

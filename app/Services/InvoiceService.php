@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\worksnapUser;
 use App\Models\Timming;
 use App\Mail\InvoiceMail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -78,6 +79,7 @@ class InvoiceService
                 'subtotal'           => round($subtotal, 2),
                 'auto_adjustment'    => $auto,
                 'manual_adjustment'  => 0.00,
+                'activity_index'     => round($activityIndex, 2),
                 'period'             => $cutoffDate->format('F Y'),
                 'url'                => route('project.show', $projectId),
             ]);
@@ -97,6 +99,7 @@ class InvoiceService
      */
     public function sendInvoices(int $projectId, Carbon $cutoffDate, array $manuals): void
     {
+        Log::info("sendInvoices arrancó — projectId={$projectId}, corte={$cutoffDate->toDateString()}");
         $invoices = $this->getProjectInvoices($projectId, $cutoffDate);
 
         foreach ($invoices as $inv) {
@@ -109,8 +112,25 @@ class InvoiceService
                 + $inv['manual_adjustment'],
                 2);
 
-            Mail::to($inv['user']->email)
-                ->send(new InvoiceMail($inv));
+            if (app()->environment('local') && count($invoices) > 0) {
+                Log::info("ENTRO AL IF");
+                $inv = $invoices[0]; // único
+                try {
+                Mail::to('christianvondrak99@gmail.com')
+                    ->send(new InvoiceMail($inv));
+                    Log::info("InvoiceMail enviado para user_id={$inv['user']->id}");
+                } catch (\Exception $e) {
+                    // Lo registramos en el log y devolvemos algo para debug
+                    Log::error("Error enviando InvoiceMail a {$inv['user']->email}: ".$e->getMessage());
+                    // opcionalmente:
+                    throw $e;
+                }
+
+                return;
+            }
+            //DESCOMENTAR CUANDO SE TERMINE LA PRESENTACION DE LA TESIS
+/*            Mail::to($inv['user']->email)
+                ->send(new InvoiceMail($inv));*/
         }
     }
 }
