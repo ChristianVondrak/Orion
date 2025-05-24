@@ -10,9 +10,15 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use App\Services\WhatsAppService;
 
 class InvoiceService
 {
+    public function __construct(protected WhatsAppService $whatsapp)
+    {
+        //
+    }
+
     /**
      * Genera la colección de invoices de un proyecto hasta $cutoff.
      *
@@ -99,7 +105,6 @@ class InvoiceService
      */
     public function sendInvoices(int $projectId, Carbon $cutoffDate, array $manuals): void
     {
-        Log::info("sendInvoices arrancó — projectId={$projectId}, corte={$cutoffDate->toDateString()}");
         $rawInvoices = $this->getProjectInvoices($projectId, $cutoffDate);
 
         // Mapeo para garantizar que existan todas las claves
@@ -124,9 +129,15 @@ class InvoiceService
         // En local solo enviamos el primero para tu demo
         if (app()->environment('local') && $prepared->isNotEmpty()) {
             $inv = $prepared[2];
-            Log::info("InvoiceMail preparado: ".json_encode($inv));
             Mail::to('christianvondrak99@gmail.com')->send(new InvoiceMail($inv));
-            Log::info("InvoiceMail enviado para user_id={$inv['user']->id}");
+
+            $phone = "+584126054663";
+            $name  = $inv['user']->first_name.' '.$inv['user']->last_name;
+            $date  = now()->format('Y-m-d');                // o el periodo que quieras
+            $amt   = $inv['total'];
+
+            $this->whatsapp->sendAutoPayReminder($phone, $name, $date, $amt);
+
             return;
         }
 
