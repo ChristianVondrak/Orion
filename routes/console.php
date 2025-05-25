@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Console\Scheduling\Schedule;
 
 return function (Schedule $schedule): void {
     // 1) Cada lunes 08:00 → desviación de horas de proyecto
@@ -27,4 +28,6 @@ return function (Schedule $schedule): void {
         ->command('alerts:user-performance')
         ->dailyAt('19:00')
         ->withoutOverlapping();
+
+    $schedule->command('worksnaps:sync')->dailyAt('19:20');
 };
