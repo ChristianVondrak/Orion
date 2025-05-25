@@ -37,4 +37,8 @@ return [
         'token'          => env('WHATSAPP_ACCESS_TOKEN'),
     ],
 
+    'worksnaps' => [
+        'api_key' => env('WORKSNAPS_API_KEY'),
+    ],
+
 ];
