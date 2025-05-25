@@ -174,7 +174,7 @@ class ReportController extends Controller
     }
 
     /**
-     * Show or export the “New Hires” report based on worksnapUser.created_at.
+     * Show or export the "New Hires" report based on worksnapUser.created_at.
      *
      * @param Request $request
      * @param Report $reportService
@@ -264,5 +264,61 @@ class ReportController extends Controller
             ->appends($request->only(['start','end']));
 
         return view('reports.terminations', compact('rows','start','end'));
+    }
+
+    /**
+     * Display or export the Login report.
+     *
+     * @param Request $request
+     * @param Report $reportService
+     * @return Application|Factory|View|\Illuminate\Foundation\Application|Response|\Illuminate\View\View|BinaryFileResponse
+     */
+    public function login(Request $request, Report $reportService)
+    {
+        // Defaults: first and last day of current month
+        $start = Carbon::now()->startOfMonth();
+        $end   = Carbon::now()->endOfMonth();
+
+        // Override if valid range passed
+        if ($request->filled('start') && $request->filled('end')) {
+            try {
+                $start = Carbon::parse($request->start)->startOfDay();
+                $end   = Carbon::parse($request->end)->endOfDay();
+            } catch (\Exception $e) {
+                // keep defaults
+            }
+        }
+
+        // Excel export?
+        if ($request->query('export') === 'excel') {
+            $all = $reportService->getAllLoginReportData($start, $end);
+            return Excel::download(
+                new \App\Exports\LoginReportExport($all->toArray()),
+                "login-report_{$start->format('Ymd')}-{$end->format('Ymd')}.xlsx"
+            );
+        }
+
+        // PDF export?
+        if ($request->query('export') === 'pdf') {
+            $all = $reportService->getAllLoginReportData($start, $end);
+            $pdf = Pdf::loadView('reports.login_pdf', [
+                'rows'  => $all,
+                'start' => $start->format('Y/m/d'),
+                'end'   => $end->format('Y/m/d'),
+            ])->setPaper('a4','landscape');
+
+            return $pdf->download("login-report_{$start->format('Ymd')}-{$end->format('Ymd')}.pdf");
+        }
+
+        // Otherwise paginate & render
+        $rows = $reportService
+            ->getLoginReportData($start, $end, 15)
+            ->appends($request->only(['start','end']));
+
+        return view('reports.login', [
+            'rows'  => $rows,
+            'start' => $start->format('Y/m/d'),
+            'end'   => $end->format('Y/m/d'),
+        ]);
     }
 }
