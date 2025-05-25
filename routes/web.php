@@ -35,7 +35,7 @@ Route::middleware([
     // Módulo de reportes
     Route::prefix('reports')->name('reports.')->group(function() {
         Route::get('/', [ReportController::class, 'index'])->name('index');
-        Route::get('/login', [ReportController::class, 'loginReport'])->name('login');
+        Route::get('/login', [ReportController::class, 'login'])->name('login');
         Route::get('/activity', [ReportController::class, 'activityIndex'])->name('activity');
         Route::get('/new-hires', [ReportController::class, 'newHires'])->name('newHires');
         Route::get('/rate-updates', [ReportController::class, 'rateUpdates'])->name('rateupdates');

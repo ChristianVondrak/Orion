@@ -46,34 +46,46 @@
                     <button type="submit" id="btnEnviar" class="m-4 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
                         Search
                     </button>
+                    <button type="button" id="btnPlannedHours" class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800">
+                        {{ __('Planned Hours') }}
+                    </button>
                 </div>
             </form>
-        </div>
-    </div>
 
-    @php
-        $weekStart = today()->startOfWeek();
-        $default   = \App\Models\PlannedProjectHour::getForWeek($project->id, $weekStart);
-    @endphp
-
-    <div class="mb-6 p-4 bg-white rounded shadow">
-        <h3 class="font-semibold">Horas planificadas (semana {{ $weekStart->format('Y-m-d') }})</h3>
-        <form action="{{ route('projects.planned-hours.store', $project) }}" method="POST" class="flex items-end gap-4">
-            @csrf
-            <input type="hidden" name="week_start" value="{{ $weekStart->toDateString() }}">
-
-            <div>
-                <label class="block text-sm">Horas planificadas</label>
-                <input type="number" step="0.01" min="0" name="planned_hours"
-                       value="{{ old('planned_hours',$default) }}"
-                       class="border rounded p-2 w-24" />
+            @php
+                $weekStart = today()->startOfWeek();
+                $default   = \App\Models\PlannedProjectHour::getForWeek($project->id, $weekStart);
+            @endphp
+            
+            <!-- Modal para horas planificadas -->
+            <div id="plannedHoursModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+                <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                    <div class="mt-3">
+                        <h3 class="text-lg font-semibold mb-4">Horas planificadas (semana {{ $weekStart->format('Y-m-d') }})</h3>
+                        <form action="{{ route('projects.planned-hours.store', $project) }}" method="POST" class="space-y-4">
+                            @csrf
+                            <input type="hidden" name="week_start" value="{{ $weekStart->toDateString() }}">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Horas planificadas</label>
+                                <input type="number" step="0.01" min="0" name="planned_hours"
+                                       value="{{ old('planned_hours', $default) }}"
+                                       class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500" />
+                            </div>
+                            <div class="flex justify-end space-x-3 mt-4">
+                                <button type="button" id="closeModal"
+                                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">
+                                    Cancelar
+                                </button>
+                                <button type="submit"
+                                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                    Guardar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-
-            <button type="submit"
-                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                Guardar
-            </button>
-        </form>
+        </div>
     </div>
 
     <div class="pb-12 flex flex-col justify-center items-center lg:mx-20 mx-4 md:mx-10">
@@ -144,3 +156,25 @@
 </x-app-layout>
 
 <script type="text/javascript" src="{{ asset('js/datepicker.js') }}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('plannedHoursModal');
+        const btn = document.getElementById('btnPlannedHours');
+        const closeBtn = document.getElementById('closeModal');
+
+        btn.addEventListener('click', function() {
+            modal.classList.remove('hidden');
+        });
+
+        closeBtn.addEventListener('click', function() {
+            modal.classList.add('hidden');
+        });
+
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    });
+</script>
