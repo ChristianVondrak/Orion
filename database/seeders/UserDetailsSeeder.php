@@ -9,10 +9,18 @@ use Faker\Factory as Faker;
 
 class UserDetailsSeeder extends Seeder
 {
-
-    public function run(){
-
+    /**
+     * Run the database seeds.
+     *
+     * Populates the user_details table for existing worksnapsUser entries
+     * that do not already have a detail record.
+     *
+     * @return void
+     */
+    public function run()
+    {
         $faker = Faker::create();
+
         // Fetch all users without details
         $usersWithoutDetails = worksnapUser::doesntHave('detail')->get();
 

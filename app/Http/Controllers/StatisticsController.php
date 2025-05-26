@@ -7,6 +7,7 @@ use App\Models\projectUser;
 use App\Models\User;
 use App\Models\UserDetail;
 use App\Models\Timming;
+use App\Models\worksnapUser;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
@@ -72,15 +73,18 @@ class StatisticsController extends Controller
      */
     public function contractorsSeniority()
     {
-        return User::all()->mapToGroups(function ($user) {
-            $years = now()->diffInYears($user->created_at);
-            if ($years <= 2) return ['0-2' => 1];
-            if ($years <= 5) return ['3-5' => 1];
-            if ($years <= 8) return ['6-8' => 1];
-            if ($years <= 11) return ['9-11' => 1];
-            if ($years <= 20) return ['12-20' => 1];
-            return ['21+' => 1];
-        })->map(fn ($group) => $group->count());
+        return worksnapUser::whereNotNull('email')
+            ->where('email', '!=', '')
+            ->get()
+            ->mapToGroups(function ($user) {
+                $years = now()->diffInYears($user->created_at);
+                if ($years <= 2) return ['0-2' => 1];
+                if ($years <= 5) return ['3-5' => 1];
+                if ($years <= 8) return ['6-8' => 1];
+                if ($years <= 11) return ['9-11' => 1];
+                if ($years <= 20) return ['12-20' => 1];
+                return ['21+' => 1];
+            })->map(fn ($group) => $group->count());
     }
 
     /**
@@ -97,13 +101,13 @@ class StatisticsController extends Controller
     }
 
     /**
-     * Get the number of contractors per department.
+     * Get the number of contractors per position.
      *
      * @return \Illuminate\Support\Collection
      */
-    public function contractorsPerDepartment()
+    public function contractorsPerPosition()
     {
-        return UserDetail::select('position as department')
+        return UserDetail::select('position')
             ->selectRaw('COUNT(*) as total')
             ->groupBy('position')
             ->get();
@@ -117,21 +121,21 @@ class StatisticsController extends Controller
      */
     public function projectHourCompletion()
     {
-    $month = now()->month;
-    $year = now()->year;
+        $month = now()->month;
+        $year = now()->year;
+        $monthlyGoal = config('worktime.monthly_goal', 160); // Permite configurar el objetivo mensual
 
-    $projects = Timming::whereMonth('created_at', $month)
-        ->whereYear('created_at', $year)
-        ->select('project_id')
-        ->selectRaw('SUM(TIMESTAMPDIFF(HOUR, FROM_UNIXTIME(from_timestamp), FROM_UNIXTIME(logged_timestamp))) as total_hours')
-        ->groupBy('project_id')
-        ->get()
-        ->map(function ($row) {
-            $row->percentage = round(($row->total_hours / 160) * 100, 2);
-            return $row;
-        });
-
-    return $projects;
+        return Timming::whereMonth('created_at', $month)
+            ->whereYear('created_at', $year)
+            ->join('projects', 'timmings.project_id', '=', 'projects.id')
+            ->select('projects.id as project_id', 'projects.name as project_name')
+            ->selectRaw('SUM(TIMESTAMPDIFF(HOUR, FROM_UNIXTIME(from_timestamp), FROM_UNIXTIME(logged_timestamp))) as total_hours')
+            ->groupBy('projects.id', 'projects.name')
+            ->get()
+            ->map(function ($row) use ($monthlyGoal) {
+                $row->percentage = round(($row->total_hours / $monthlyGoal) * 100, 2);
+                return $row;
+            });
     }
 }
 

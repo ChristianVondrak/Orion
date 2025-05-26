@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Database\factories\WorksnapUserFactory;
+use Illuminate\Notifications\Notifiable;
 
 class worksnapUser extends Model
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     /**
      * Defines a many-to-many relationship with Project.
@@ -58,6 +58,10 @@ class worksnapUser extends Model
         return $this->hasMany(projectUser::class);
     }
 
+    public function plannedHours()
+    {
+        return $this->hasMany(PlannedUserHour::class, 'user_id');
+    }
     /**
      * Calculate worked time of a user in hours per project.
      *

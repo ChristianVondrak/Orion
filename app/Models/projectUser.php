@@ -10,6 +10,12 @@ class projectUser extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'user_id',
+        'project_id',
+        'hourly_rate',
+    ];
+
     /**
      * Defines a "belongs to" relationship with the project model.
      *

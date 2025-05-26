@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PlannedProjectHourController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserDetailController;
+use App\Http\Controllers\UserTerminationController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;         // ← IMPORTA HomeController
-use App\Http\Controllers\ProjectController;      // ← IMPORTA ProjectController
-use App\Http\Controllers\UserController;         // ← IMPORTA UserController
-use App\Http\Controllers\UserDetailController;   // ← IMPORTA UserDetailController
 use App\Http\Controllers\StatisticsController;   // ← IMPORTA StatisticsController
 
 Route::middleware([
@@ -26,5 +29,43 @@ Route::middleware([
         ->name('user.details.store');
     Route::put('/user/{user}/details',  [UserDetailController::class, 'update'])
         ->name('user.details.update');
+
+    // Route to update user termination
+    Route::post('/user/{user}/termination', [UserTerminationController::class, 'store'])
+        ->name('user.termination.store');
+
+    // Módulo de reportes
+    Route::prefix('reports')->name('reports.')->group(function() {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/login', [ReportController::class, 'login'])->name('login');
+        Route::get('/activity', [ReportController::class, 'activityIndex'])->name('activity');
+        Route::get('/new-hires', [ReportController::class, 'newHires'])->name('newHires');
+        Route::get('/rate-updates', [ReportController::class, 'rateUpdates'])->name('rateupdates');
+        Route::get('/terminations', [ReportController::class, 'terminations'])->name('terminations');
+        // exportación
+        Route::get('/{type}/export', [ReportController::class, 'export'])->name('export');
+    });
+
+    // Alertas
+    Route::post('projects/{project}/planned-hours', [PlannedProjectHourController::class,'store'])
+        ->name('projects.planned-hours.store');
+    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])
+        ->name('notifications.markAllRead');
+    Route::post('notifications/{id}/mark-read', [NotificationController::class, 'markRead'])
+        ->name('notifications.markRead');
+
+    // Invoices
+    // Vista previa del corte
+    Route::get('project/{project}/invoices/preview', [InvoiceController::class,'preview'])
+        ->name('project.invoices.preview');
+    // Envío final de las facturas
+    Route::post('project/{project}/invoices/send', [InvoiceController::class,'send'])
+        ->name('project.invoices.send');
+
+    // Hourly Rate Update
+    Route::post(
+        '/user/{user}/hourly-rates',
+        [UserController::class, 'bulkUpdateHourlyRates']
+    )->name('user.rate.bulkUpdate');
 });
 

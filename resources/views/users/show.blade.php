@@ -47,10 +47,24 @@
                     {{ $user->email }}
                 </p>
             </div>
-            <button id="toggle-detail-form"
-                    class="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                {{ $user->detail ? 'Edit Details' : 'Add Details' }}
-            </button>
+            <div class="flex items-center gap-4 mb-4">
+                {{-- Botón para mostrar/ocultar el form de detalles --}}
+                <button id="toggle-detail-form"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    {{ $user->detail ? 'Edit Details' : 'Add Details' }}
+                </button>
+
+                {{-- Nuevo botón para actualizar tarifas --}}
+                <button id="toggle-rate-form"
+                        class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                    Update Hourly Rates
+                </button>
+
+                <button id="toggle-terminate-form"
+                        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                    Terminate Contract
+                </button>
+            </div>
         </div>
 
         {{-- UserDetails Form --}}
@@ -140,6 +154,63 @@
                     <button type="submit"
                             class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
                         {{ $user->detail ? 'Update Details' : 'Save Details' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="terminate-form" class="hidden bg-gray-50 p-6 rounded mt-4 border border-gray-200">
+            <form action="{{ route('user.termination.store', $user->id) }}" method="POST">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium">Termination Date</label>
+                        <input name="termination_date" type="date"
+                               value="{{ old('termination_date') }}"
+                               class="mt-1 block w-full border rounded p-2" />
+                        @error('termination_date')
+                        <p class="mt-1 text-red-600 text-sm">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Reason</label>
+                        <input name="reason" type="text"
+                               value="{{ old('reason') }}"
+                               class="mt-1 block w-full border rounded p-2" />
+                        @error('reason')
+                        <p class="mt-1 text-red-600 text-sm">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                        Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+
+
+        {{-- Formulario de actualización de tarifas --}}
+        <div id="rate-form" class="hidden bg-gray-50 p-6 rounded mt-4 border border-gray-200">
+            <form action="{{ route('user.rate.bulkUpdate', $user->id) }}" method="POST">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @foreach($projectUsers as $pu)
+                        <div class="flex items-center gap-2">
+                            <span class="w-1/2">{{ $pu->project->name }}</span>
+                            <input type="text"
+                                   name="rates[{{ $pu->project_id }}]"
+                                   value="{{ old('rates.'.$pu->project_id, $pu->hourly_rate) }}"
+                                   class="w-1/2 border rounded p-1 text-right" />
+                        </div>
+                    @endforeach
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button type="submit"
+                            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Save All Rates
                     </button>
                 </div>
             </form>

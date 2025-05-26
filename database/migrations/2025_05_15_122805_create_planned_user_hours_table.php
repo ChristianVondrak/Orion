@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('professional_status', function (Blueprint $table) {
+        Schema::create('planned_user_hours', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained(table: 'worksnap_users');
-            $table->enum('status', ['active', 'terminated']);
-            $table->string('reason')->nullable();
-            $table->date('start_date');
-            $table->date('end_date')->nullable();
+            $table->foreignId('user_id')->constrained('worksnap_users')->cascadeOnDelete();
+            $table->date('week_start');
+            $table->decimal('planned_hours', 8, 2);
+            $table->unique(['user_id','week_start']);
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('professional_status');
+        Schema::dropIfExists('planned_user_hours');
     }
 };
