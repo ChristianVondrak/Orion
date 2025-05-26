@@ -117,21 +117,21 @@ class StatisticsController extends Controller
      */
     public function projectHourCompletion()
     {
-        $month = now()->month;
-        $year = now()->year;
+    $month = now()->month;
+    $year = now()->year;
 
-        $projects = Timming::whereMonth('created_at', $month)
-            ->whereYear('created_at', $year)
-            ->select('project_id')
-            ->selectRaw('SUM(TIMESTAMPDIFF(HOUR, from_timestamp, to_timestamp)) as total_hours')
-            ->groupBy('project_id')
-            ->get()
-            ->map(function ($row) {
-                $row->percentage = round(($row->total_hours / Project::MONTH_HOURS_GOAL_VZLA) * 100, 2);
-                return $row;
-            });
+    $projects = Timming::whereMonth('created_at', $month)
+        ->whereYear('created_at', $year)
+        ->select('project_id')
+        ->selectRaw('SUM(TIMESTAMPDIFF(HOUR, FROM_UNIXTIME(from_timestamp), FROM_UNIXTIME(logged_timestamp))) as total_hours')
+        ->groupBy('project_id')
+        ->get()
+        ->map(function ($row) {
+            $row->percentage = round(($row->total_hours / 160) * 100, 2);
+            return $row;
+        });
 
-        return $projects;
+    return $projects;
     }
 }
 

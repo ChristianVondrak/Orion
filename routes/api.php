@@ -21,7 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // Statistics endpoints
-Route::middleware(['auth:sanctum'])->prefix('statistics')->group(function () {
+Route::prefix('statistics')->group(function () {
     Route::get('/compensation', [StatisticsController::class, 'compensationStructure']);
     Route::get('/companies', [StatisticsController::class, 'contractorsPerCompany']);
     Route::get('/seniority', [StatisticsController::class, 'contractorsSeniority']);
