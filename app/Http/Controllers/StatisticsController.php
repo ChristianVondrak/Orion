@@ -8,8 +8,10 @@ use App\Models\User;
 use App\Models\UserDetail;
 use App\Models\Timming;
 use App\Models\worksnapUser;
+use App\Models\PlannedProjectHour;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 /**
  * Class StatisticsController
@@ -55,13 +57,25 @@ class StatisticsController extends Controller
     /**
      * Get the number of contractors per company.
      *
-     * @return \Illuminate\Support\Collection
+     * @return \Illuminate\Http\JsonResponse
      */
     public function contractorsPerCompany()
     {
-        return Project::withCount('projectUsers as total')
+        $projects = Project::withCount(['projectUsers', 'worksnapUsers'])
             ->select('id', 'name')
-            ->get();
+            ->get()
+            ->map(function($project) {
+                return [
+                    'id' => $project->id,
+                    'name' => $project->name ?: 'Proyecto sin nombre',
+                    'total' => $project->projectUsers()->count(),
+                    'has_hourly_rates' => $project->projectUsers()
+                        ->where('hourly_rate', '>', 0)
+                        ->exists()
+                ];
+            });
+
+        return response()->json($projects);
     }
 
     /**
@@ -73,18 +87,45 @@ class StatisticsController extends Controller
      */
     public function contractorsSeniority()
     {
-        return worksnapUser::whereNotNull('email')
+        $users = worksnapUser::select('id', 'email', 'created_at')
+            ->whereNotNull('email')
             ->where('email', '!=', '')
-            ->get()
-            ->mapToGroups(function ($user) {
-                $years = now()->diffInYears($user->created_at);
-                if ($years <= 2) return ['0-2' => 1];
-                if ($years <= 5) return ['3-5' => 1];
-                if ($years <= 8) return ['6-8' => 1];
-                if ($years <= 11) return ['9-11' => 1];
-                if ($years <= 20) return ['12-20' => 1];
-                return ['21+' => 1];
-            })->map(fn ($group) => $group->count());
+            ->whereNotNull('created_at')
+            ->get();
+
+        $ranges = [
+            '0-2' => 0,
+            '3-5' => 0,
+            '6-8' => 0,
+            '9-11' => 0,
+            '12-20' => 0,
+            '21+' => 0
+        ];
+
+        foreach ($users as $user) {
+            try {
+                $years = Carbon::parse($user->created_at)->diffInYears(Carbon::now());
+                
+                if ($years <= 2) {
+                    $ranges['0-2']++;
+                } elseif ($years <= 5) {
+                    $ranges['3-5']++;
+                } elseif ($years <= 8) {
+                    $ranges['6-8']++;
+                } elseif ($years <= 11) {
+                    $ranges['9-11']++;
+                } elseif ($years <= 20) {
+                    $ranges['12-20']++;
+                } else {
+                    $ranges['21+']++;
+                }
+            } catch (\Exception $e) {
+                \Log::error("Error calculando antigüedad para usuario {$user->id}: " . $e->getMessage());
+                continue;
+            }
+        }
+
+        return collect($ranges);
     }
 
     /**
@@ -115,27 +156,62 @@ class StatisticsController extends Controller
 
     /**
      * Get the percentage of time worked per project in the current month,
-     * relative to the monthly goal (160 hours).
+     * relative to the planned hours.
      *
      * @return \Illuminate\Support\Collection
      */
     public function projectHourCompletion()
     {
-        $month = now()->month;
-        $year = now()->year;
-        $monthlyGoal = config('worktime.monthly_goal', 160); // Permite configurar el objetivo mensual
+        $start = now()->startOfMonth();
+        $end = now()->endOfMonth();
 
-        return Timming::whereMonth('created_at', $month)
-            ->whereYear('created_at', $year)
-            ->join('projects', 'timmings.project_id', '=', 'projects.id')
-            ->select('projects.id as project_id', 'projects.name as project_name')
-            ->selectRaw('SUM(TIMESTAMPDIFF(HOUR, FROM_UNIXTIME(from_timestamp), FROM_UNIXTIME(logged_timestamp))) as total_hours')
-            ->groupBy('projects.id', 'projects.name')
+        return Project::with('projectUsers')
+            ->whereHas('projectUsers') // Solo proyectos que tengan usuarios asignados
             ->get()
-            ->map(function ($row) use ($monthlyGoal) {
-                $row->percentage = round(($row->total_hours / $monthlyGoal) * 100, 2);
-                return $row;
+            ->map(function ($project) use ($start, $end) {
+                // Obtener horas planificadas
+                $plannedHours = PlannedProjectHour::getForWeek($project->id, $start) ?: 
+                    ($project->projectUsers->count() * 160); // Default: 160h por usuario
+
+                // Calcular horas reales basadas en bloques de 10 minutos
+                $seconds = $project->timmings()
+                    ->whereBetween('from_timestamp', [$start->timestamp, $end->timestamp])
+                    ->count() * 10 * 60;
+                $actualHours = round($seconds / 3600, 2);
+
+                // Calcular porcentaje y estado
+                $percentage = $plannedHours > 0 
+                    ? min(100, round(($actualHours / $plannedHours) * 100, 2))
+                    : 0;
+
+                return [
+                    'project_id' => $project->id,
+                    'project_name' => $project->name,
+                    'total_hours' => $actualHours,
+                    'planned_hours' => $plannedHours,
+                    'percentage' => $percentage,
+                    'status' => $this->getProjectStatus($actualHours, $plannedHours)
+                ];
             });
+    }
+
+    /**
+     * Get the status of a project based on its hours completion
+     *
+     * @param float $actual
+     * @param float $planned
+     * @return string
+     */
+    private function getProjectStatus($actual, $planned)
+    {
+        if ($planned <= 0) return 'warning';
+        
+        $percentage = ($actual / $planned) * 100;
+        // Usando los mismos umbrales que en AlertService (10% de desviación)
+        if ($percentage >= 90 && $percentage <= 110) return 'on-track';
+        if ($percentage >= 70 && $percentage < 90) return 'warning';
+        if ($percentage > 110) return 'over';
+        return 'behind';
     }
 }
 

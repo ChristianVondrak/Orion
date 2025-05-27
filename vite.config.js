@@ -16,6 +16,8 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
+                'resources/css/statistics-dashboard.css',
+                'resources/js/statistics-dashboard.js'
             ],          
             refresh: true,
         }),

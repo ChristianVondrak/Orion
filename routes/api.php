@@ -26,7 +26,7 @@ Route::prefix('statistics')->group(function () {
     Route::get('/companies', [StatisticsController::class, 'contractorsPerCompany']);
     Route::get('/seniority', [StatisticsController::class, 'contractorsSeniority']);
     Route::get('/marital-status', [StatisticsController::class, 'maritalStatusByGender']);
-    Route::get('/departments', [StatisticsController::class, 'contractorsPerDepartment']);
+    Route::get('/positions', [StatisticsController::class, 'contractorsPerPosition']);
     Route::get('/project-hours', [StatisticsController::class, 'projectHourCompletion']);
 });
 

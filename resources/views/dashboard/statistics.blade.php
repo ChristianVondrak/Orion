@@ -1,52 +1,216 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Statistics') }}
-        </h2>
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Dashboard de Recursos Humanos') }}
+            </h2>
+            <div class="text-sm text-gray-500">
+                Última actualización: {{ now()->format('d/m/Y H:i') }}
+            </div>
+        </div>
     </x-slot>
 
     {{-- Meta CSRF para JavaScript --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    {{-- Estilos y Scripts --}}
+    @vite(['resources/css/statistics-dashboard.css', 'resources/js/statistics-dashboard.js'])
 
-    <div class="py-12 px-4">
-        <div class="bg-white shadow sm:rounded-lg p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-6">HR Dashboard Statistics</h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- 1. Compensation Structure -->
-                <div>
-                    <h4 class="text-md font-semibold mb-2">Fixed vs Hourly</h4>
-                    <canvas id="compensationChart"></canvas>
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            {{-- Resumen General --}}
+            <div class="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {{-- Total Contratistas --}}
+                <div class="stat-card bg-white overflow-visible shadow-xl sm:rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Total Contratistas</h3>
+                        <div class="tooltip-container">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hover:text-gray-600 cursor-help" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                            <div class="tooltip-content">
+                                Número total de contratistas activos en todos los proyectos
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="loading-overlay" id="totalContractorsLoader">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <p class="text-3xl font-bold text-indigo-600" id="totalContractors">...</p>
+                    </div>
                 </div>
 
-                <!-- 2. Contractors per Company -->
-                <div>
-                    <h4 class="text-md font-semibold mb-2">Contractors per Company</h4>
-                    <canvas id="companiesChart"></canvas>
+                {{-- Proyectos Activos --}}
+                <div class="stat-card bg-white overflow-visible shadow-xl sm:rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Proyectos Activos</h3>
+                        <div class="tooltip-container">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hover:text-gray-600 cursor-help" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                            <div class="tooltip-content">
+                                Cantidad de proyectos que tienen contratistas asignados y están registrando horas actualmente
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="loading-overlay" id="activeProjectsLoader">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <p class="text-3xl font-bold text-green-600" id="activeProjects">...</p>
+                    </div>
                 </div>
 
-                <!-- 3. Seniority Ranges -->
-                <div>
-                    <h4 class="text-md font-semibold mb-2">Seniority Ranges</h4>
-                    <canvas id="seniorityChart"></canvas>
+                {{-- Horas este mes --}}
+                <div class="stat-card bg-white overflow-visible shadow-xl sm:rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Horas este mes</h3>
+                        <div class="tooltip-container">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hover:text-gray-600 cursor-help" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                            <div class="tooltip-content">
+                                Total de horas registradas en el mes actual por todos los contratistas
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="loading-overlay" id="monthlyHoursLoader">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <p class="text-3xl font-bold text-blue-600" id="monthlyHours">...</p>
+                    </div>
                 </div>
 
-                <!-- 4. Marital Status by Gender -->
-                <div>
-                    <h4 class="text-md font-semibold mb-2">Marital Status by Gender</h4>
-                    <canvas id="maritalChart"></canvas>
+                {{-- Tasa de Ocupación --}}
+                <div class="stat-card bg-white overflow-visible shadow-xl sm:rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Tasa de Ocupación</h3>
+                        <div class="tooltip-container">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hover:text-gray-600 cursor-help" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                            <div class="tooltip-content">
+                                <p>Indica el porcentaje de cumplimiento de horas trabajadas en relación a las horas planificadas hasta la fecha actual del mes. Se calcula considerando:</p>
+                                <ul class="mt-2 mb-3 list-disc list-inside text-sm">
+                                    <li>Días laborables transcurridos</li>
+                                    <li>Horas semanales planificadas</li>
+                                    <li>Total de horas registradas</li>
+                                </ul>
+                                <div class="border-t border-gray-600 pt-2">
+                                    <div class="status-indicator">
+                                        <span class="status-optimal">≥90%</span> Óptimo
+                                    </div>
+                                    <div class="status-indicator">
+                                        <span class="status-moderate">70-89%</span> Moderado
+                                    </div>
+                                    <div class="status-indicator">
+                                        <span class="status-low">&lt;70%</span> Bajo
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="loading-overlay" id="occupancyRateLoader">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <p class="text-3xl font-bold" id="occupancyRate">...</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Primera Fila de Gráficos --}}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {{-- Compensación --}}
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Estructura de Compensación</h3>
+                        <div class="text-sm text-gray-500" id="compensationTotal"></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="loading-overlay" id="compensationChartLoader">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <canvas id="compensationChart"></canvas>
+                    </div>
                 </div>
 
-                <!-- 5. Contractors per Department -->
-                <div>
-                    <h4 class="text-md font-semibold mb-2">Contractors per Department</h4>
-                    <canvas id="departmentsChart"></canvas>
+                {{-- Compañías --}}
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Distribución por Compañía</h3>
+                        <div class="text-sm text-gray-500" id="companiesTotal"></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="loading-overlay" id="companiesChartLoader">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <canvas id="companiesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Segunda Fila de Gráficos --}}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {{-- Antigüedad --}}
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Rangos de Antigüedad</h3>
+                        <div class="text-sm text-gray-500" id="seniorityTotal"></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="loading-overlay" id="seniorityChartLoader">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <canvas id="seniorityChart"></canvas>
+                    </div>
                 </div>
 
-                <!-- 6. Project Hour Completion -->
-                <div>
-                    <h4 class="text-md font-semibold mb-2">Project Hour Completion</h4>
-                    <canvas id="hoursChart"></canvas>
+                {{-- Estado Civil por Género --}}
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Estado Civil por Género</h3>
+                        <div class="text-sm text-gray-500" id="maritalTotal"></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="loading-overlay" id="maritalChartLoader">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <canvas id="maritalChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Tercera Fila de Gráficos --}}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {{-- Posiciones --}}
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Distribución por Posición</h3>
+                        <div class="text-sm text-gray-500" id="positionsTotal"></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="loading-overlay" id="positionsChartLoader">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <canvas id="positionsChart"></canvas>
+                    </div>
+                </div>
+
+                {{-- Horas por Proyecto --}}
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Completitud de Horas por Proyecto</h3>
+                        <div class="text-sm text-gray-500" id="hoursTotal"></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="loading-overlay" id="hoursChartLoader">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <canvas id="hoursChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -55,119 +219,5 @@
     {{-- Scripts --}}
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-        // Configura Axios para Sanctum
-        axios.defaults.withCredentials = true;
-        axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-        axios.defaults.headers.common['X-CSRF-TOKEN'] =
-          document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        // Inicializa cookie de CSRF/Sanctum
-        await axios.get('/sanctum/csrf-cookie');
-
-        // 1. Compensation Structure (Pie)
-        axios.get('/api/statistics/compensation')
-            .then(({ data }) => {
-                new Chart(document.getElementById('compensationChart'), {
-                    type: 'pie',
-                    data: {
-                        labels: ['Fixed', 'Hourly'],
-                        datasets: [{
-                            data: [data.fixed, data.hourly],
-                            backgroundColor: ['#4A5568','#3182CE']
-                        }]
-                    }
-                });
-            });
-
-        // 2. Contractors per Company (Bar)
-        axios.get('/api/statistics/companies')
-            .then(({ data }) => {
-                const labels = data.map(d => d.name);
-                const values = data.map(d => d.total);
-                new Chart(document.getElementById('companiesChart'), {
-                    type: 'bar',
-                    data: {
-                        labels,
-                        datasets: [{ label: 'Contractors', data: values }]
-                    },
-                    options: { responsive: true }
-                });
-            });
-
-        // 3. Seniority Ranges (Bar)
-        axios.get('/api/statistics/seniority')
-            .then(({ data }) => {
-                const labels = Object.keys(data);
-                const values = Object.values(data);
-                new Chart(document.getElementById('seniorityChart'), {
-                    type: 'bar',
-                    data: {
-                        labels,
-                        datasets: [{ label: 'Count', data: values }]
-                    },
-                    options: { responsive: true }
-                });
-            });
-
-        // 4. Marital Status by Gender (Stacked Bar)
-        axios.get('/api/statistics/marital-status')
-            .then(({ data }) => {
-                const genders = [...new Set(data.map(d => d.gender))];
-                const statuses = [...new Set(data.map(d => d.marital_status))];
-                const datasets = genders.map(gender => ({
-                    label: gender,
-                    data: statuses.map(status => {
-                        const rec = data.find(d => d.gender === gender && d.marital_status === status);
-                        return rec ? rec.total : 0;
-                    }),
-                    backgroundColor: gender === 'Male' ? '#4299E1' : '#ED64A6'
-                }));
-                new Chart(document.getElementById('maritalChart'), {
-                    type: 'bar',
-                    data: { labels: statuses, datasets },
-                    options: {
-                        responsive: true,
-                        scales: { x: { stacked: true }, y: { stacked: true } }
-                    }
-                });
-            });
-
-        // 5. Contractors per Department (Bar)
-        axios.get('/api/statistics/departments')
-            .then(({ data }) => {
-                const labels = data.map(d => d.department);
-                const values = data.map(d => d.total);
-                new Chart(document.getElementById('departmentsChart'), {
-                    type: 'bar',
-                    data: {
-                        labels,
-                        datasets: [{ label: 'Contractors', data: values }]
-                    },
-                    options: { responsive: true }
-                });
-            });
-
-        // 6. Project Hour Completion (Horizontal Bar)
-        axios.get('/api/statistics/project-hours')
-            .then(({ data }) => {
-                const labels = data.map(d => `Project ${d.project_id}`);
-                const values = data.map(d => d.percentage);
-                new Chart(document.getElementById('hoursChart'), {
-                    type: 'bar',
-                    data: {
-                        labels,
-                        datasets: [{ label: '% of 160h goal', data: values }]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        scales: { x: { max: 100 } }
-                    }
-                });
-            });
-    });
-    </script>
 </x-app-layout>
 
