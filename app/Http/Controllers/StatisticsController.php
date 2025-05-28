@@ -9,8 +9,10 @@ use App\Models\UserDetail;
 use App\Models\Timming;
 use App\Models\worksnapUser;
 use App\Models\PlannedProjectHour;
+use App\Services\StatsService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
 
 /**
@@ -25,6 +27,13 @@ use Carbon\Carbon;
  */
 class StatisticsController extends Controller
 {
+    protected StatsService $stats;
+
+    public function __construct(StatsService $stats)
+    {
+        $this->stats = $stats;
+    }
+
     /**
      * Display the statistics dashboard.
      *
@@ -155,63 +164,31 @@ class StatisticsController extends Controller
     }
 
     /**
-     * Get the percentage of time worked per project in the current month,
-     * relative to the planned hours.
-     *
-     * @return \Illuminate\Support\Collection
+     * Get project completion statistics
      */
-    public function projectHourCompletion()
+    public function projectHourCompletion(): JsonResponse
     {
         $start = now()->startOfMonth();
-        $end = now()->endOfMonth();
+        $end   = now()->endOfMonth();
 
-        return Project::with('projectUsers')
-            ->whereHas('projectUsers') // Solo proyectos que tengan usuarios asignados
-            ->get()
-            ->map(function ($project) use ($start, $end) {
-                // Obtener horas planificadas
-                $plannedHours = PlannedProjectHour::getForWeek($project->id, $start) ?: 
-                    ($project->projectUsers->count() * 160); // Default: 160h por usuario
+        $projects = $this->stats
+            ->projectHourCompletion($start, $end);
 
-                // Calcular horas reales basadas en bloques de 10 minutos
-                $seconds = $project->timmings()
-                    ->whereBetween('from_timestamp', [$start->timestamp, $end->timestamp])
-                    ->count() * 10 * 60;
-                $actualHours = round($seconds / 3600, 2);
-
-                // Calcular porcentaje y estado
-                $percentage = $plannedHours > 0 
-                    ? min(100, round(($actualHours / $plannedHours) * 100, 2))
-                    : 0;
-
-                return [
-                    'project_id' => $project->id,
-                    'project_name' => $project->name,
-                    'total_hours' => $actualHours,
-                    'planned_hours' => $plannedHours,
-                    'percentage' => $percentage,
-                    'status' => $this->getProjectStatus($actualHours, $plannedHours)
-                ];
-            });
+        return response()->json(['projects' => $projects]);
     }
 
     /**
-     * Get the status of a project based on its hours completion
-     *
-     * @param float $actual
-     * @param float $planned
-     * @return string
+     * Get occupancy rate statistics
      */
-    private function getProjectStatus($actual, $planned)
+    public function occupancyRate(): JsonResponse
     {
-        if ($planned <= 0) return 'warning';
-        
-        $percentage = ($actual / $planned) * 100;
-        // Usando los mismos umbrales que en AlertService (10% de desviación)
-        if ($percentage >= 90 && $percentage <= 110) return 'on-track';
-        if ($percentage >= 70 && $percentage < 90) return 'warning';
-        if ($percentage > 110) return 'over';
-        return 'behind';
+        $start = now()->startOfMonth();
+        $end   = now()->endOfMonth();
+
+        $data = $this->stats
+            ->occupancyRate($start, $end);
+
+        return response()->json($data);
     }
 }
 

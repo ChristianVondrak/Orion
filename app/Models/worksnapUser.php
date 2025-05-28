@@ -24,7 +24,7 @@ class worksnapUser extends Model
             'project_users',
             'user_id',
             'project_id')
-            ->withPivot('hourly_rate');
+            ->withPivot('hourly_rate','flat_rate','payment_type');
     }
 
     /**
@@ -81,12 +81,16 @@ class worksnapUser extends Model
     /**
      * Calculate total profits per User.
      *
-     * @param $hours
-     * @param $rate
+     * @param float $hours
+     * @param projectUser $projectUser
      * @return float
      */
-    public function totalProfits($hours,$rate): float
+    public function totalProfits($hours, projectUser $projectUser): float
     {
-        return (round($hours*$rate,2));
+        if ($projectUser->isFlatRate()) {
+            return (float) $projectUser->flat_rate;
+        }
+        
+        return round($hours * $projectUser->hourly_rate, 2);
     }
 }

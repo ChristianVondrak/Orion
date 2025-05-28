@@ -140,7 +140,7 @@ class UserController extends Controller
     }
 
     /**
-    * Bulk update hourly rates for a user across their projects,
+    * Bulk update payment rates for a user across their projects,
     * recording each change in the hourly_rate_updates table.
     *
     * @param Request $request
@@ -150,37 +150,56 @@ class UserController extends Controller
     public function bulkUpdateHourlyRates(Request $request, int $userId)
     {
         $data = $request->validate([
-            'rates'   => ['required','array'],
-            'rates.*' => ['required','numeric','min:0'],
+            'payment_types' => ['required', 'array'],
+            'payment_types.*' => ['required', 'in:hourly,flat'],
+            'hourly_rates' => ['array'],
+            'hourly_rates.*' => ['nullable', 'numeric', 'min:0'],
+            'flat_rates' => ['array'],
+            'flat_rates.*' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $projectUsers = projectUser::where('user_id', $userId)
-            ->whereIn('project_id', array_keys($data['rates']))
+            ->whereIn('project_id', array_keys($data['payment_types']))
             ->get();
 
         if ($projectUsers->isEmpty()) {
-            return back()->with('error', 'No project assignments found for updates.');
+            return back()->with('error', 'No se encontraron asignaciones de proyecto para actualizar.');
         }
 
         $connection = $projectUsers->first()->getConnection();
         $connection->transaction(function() use ($projectUsers, $data) {
             foreach ($projectUsers as $pu) {
-                $newRate = $data['rates'][$pu->project_id];
-                if ($pu->hourly_rate != $newRate) {
-                    $previous = $pu->hourly_rate;
+                $projectId = $pu->project_id;
+                $newPaymentType = $data['payment_types'][$projectId];
+                
+                // Actualizar tipo de pago
+                $pu->payment_type = $newPaymentType;
+                
+                // Actualizar tarifa según el tipo de pago
+                if ($newPaymentType === 'hourly') {
+                    $newRate = $data['hourly_rates'][$projectId] ?? 0;
+                    if ($pu->hourly_rate != $newRate) {
+                        $previous = $pu->hourly_rate;
+                        $pu->hourly_rate = $newRate;
+                        $pu->flat_rate = null;
 
-                    $pu->hourly_rate = $newRate;
-                    $pu->save();
-
-                    HourlyRateUpdate::create([
-                        'user_id'       => $pu->user_id,
-                        'previous_rate' => $previous,
-                        'new_rate'      => $newRate,
-                    ]);
+                        // Registrar cambio de tarifa por hora
+                        HourlyRateUpdate::create([
+                            'user_id' => $pu->user_id,
+                            'previous_rate' => $previous,
+                            'new_rate' => $newRate,
+                        ]);
+                    }
+                } else {
+                    $newRate = $data['flat_rates'][$projectId] ?? 0;
+                    $pu->flat_rate = $newRate;
+                    $pu->hourly_rate = null;
                 }
+                
+                $pu->save();
             }
         });
 
-        return back()->with('success', 'Hourly rates updated successfully.');
+        return back()->with('success', 'Tarifas actualizadas exitosamente.');
     }
 }

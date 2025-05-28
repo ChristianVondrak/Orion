@@ -28,8 +28,12 @@ const updateTotals = (data, type) => {
 // Función para manejar errores
 const handleError = (chartId, error) => {
     console.error(`Error loading ${chartId} data:`, error);
-    document.getElementById(chartId).parentElement.innerHTML += 
-        `<p class="text-red-500 mt-2">Error al cargar datos</p>`;
+    const chartContainer = document.getElementById(chartId).parentElement;
+    chartContainer.innerHTML += `<p class="text-red-500 mt-2">Error al cargar datos</p>`;
+    
+    // Ocultar el loader correspondiente
+    const loaderId = `${chartId}Loader`;
+    hideLoader(loaderId);
 };
 
 // Función para ocultar el loader
@@ -66,10 +70,41 @@ const updateOccupancyRate = (totalHours, workingDaysInMonth, currentWorkDay, mon
     }
 };
 
+// Función para calcular días laborables hasta la fecha actual
+const getWorkingDaysInMonth = (year, month) => {
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    let workingDays = 0;
+    
+    for (let day = 1; day <= lastDay; day++) {
+        const date = new Date(year, month, day);
+        const dayOfWeek = date.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) { // 0 es domingo, 6 es sábado
+            workingDays++;
+        }
+    }
+    
+    return Math.min(20, workingDays); // Máximo 20 días laborables
+};
+
+// Función para calcular días laborables transcurridos hasta hoy
+const getWorkingDaysToDate = (year, month, today) => {
+    let workingDays = 0;
+    
+    for (let day = 1; day <= today; day++) {
+        const date = new Date(year, month, day);
+        const dayOfWeek = date.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            workingDays++;
+        }
+    }
+    
+    return workingDays;
+};
+
 // Función para crear el gráfico de compensación
 const createCompensationChart = async () => {
     try {
-        const response = await axios.get('/api/statistics/compensation');
+        const response = await axios.get('/statistics/compensation');
         const data = response.data;
         const totalCompensation = data.fixed + data.hourly;
         
@@ -107,7 +142,7 @@ const createCompensationChart = async () => {
 // Función para crear el gráfico de compañías
 const createCompaniesChart = async () => {
     try {
-        const response = await axios.get('/api/statistics/companies');
+        const response = await axios.get('/statistics/companies');
         const data = response.data;
         
         new Chart(document.getElementById('companiesChart'), {
@@ -160,7 +195,7 @@ const createCompaniesChart = async () => {
 // Función para crear el gráfico de antigüedad
 const createSeniorityChart = async () => {
     try {
-        const response = await axios.get('/api/statistics/seniority');
+        const response = await axios.get('/statistics/seniority');
         const data = response.data;
 
         // Definir el orden específico de los rangos
@@ -245,7 +280,7 @@ const createSeniorityChart = async () => {
 // Función para crear el gráfico de estado civil
 const createMaritalChart = async () => {
     try {
-        const response = await axios.get('/api/statistics/marital-status');
+        const response = await axios.get('/statistics/marital-status');
         const data = response.data;
         
         // Definir el orden específico de los estados civiles
@@ -347,7 +382,7 @@ const createMaritalChart = async () => {
 // Función para crear el gráfico de posiciones
 const createPositionsChart = async () => {
     try {
-        const response = await axios.get('/api/statistics/positions');
+        const response = await axios.get('/statistics/positions');
         const data = response.data;
         
         new Chart(document.getElementById('positionsChart'), {
@@ -397,26 +432,27 @@ const createPositionsChart = async () => {
 // Función para crear el gráfico de horas
 const createHoursChart = async () => {
     try {
-        const response = await axios.get('/api/statistics/project-hours');
-        const data = response.data;
+        // Obtener datos de proyectos
+        const projectsResponse = await axios.get('/statistics/project-completion');
+        const { projects } = projectsResponse.data;
         
-        // Calcular totales
-        const totalHours = data.reduce((sum, project) => sum + parseFloat(project.total_hours), 0);
-        const totalPlannedHours = data.reduce((sum, project) => sum + parseFloat(project.planned_hours), 0);
+        // Obtener datos de ocupación
+        const occupancyData = await axios.get('/statistics/occupancy')
+            .then(response => response.data);
         
         // Actualizar el total de horas mensuales
-        document.getElementById('monthlyHours').textContent = `${Math.round(totalHours)}h`;
+        document.getElementById('monthlyHours').textContent = `${Math.round(occupancyData.actual_hours)}h`;
         document.getElementById('hoursTotal').textContent = 
-            `Total: ${Math.round(totalHours)}h / ${Math.round(totalPlannedHours)}h planificadas`;
+            `Total: ${Math.round(occupancyData.actual_hours)}h / ${Math.round(occupancyData.expected_hours_to_date)}h esperadas`;
         
         new Chart(document.getElementById('hoursChart'), {
             type: 'bar',
             data: {
-                labels: data.map(d => d.project_name || 'Sin nombre'),
+                labels: projects.map(d => d.project_name || 'Sin nombre'),
                 datasets: [{
                     label: '% del Objetivo Mensual',
-                    data: data.map(d => parseFloat(d.percentage).toFixed(1)),
-                    backgroundColor: data.map(d => {
+                    data: projects.map(d => parseFloat(d.percentage).toFixed(1)),
+                    backgroundColor: projects.map(d => {
                         switch(d.status) {
                             case 'on-track': return chartColors.status.optimal;
                             case 'warning': return chartColors.status.moderate;
@@ -453,7 +489,7 @@ const createHoursChart = async () => {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                const project = data[context.dataIndex];
+                                const project = projects[context.dataIndex];
                                 const status = {
                                     'on-track': 'En tiempo',
                                     'warning': 'Precaución',
@@ -463,7 +499,7 @@ const createHoursChart = async () => {
                                 return [
                                     `Estado: ${status[project.status]}`,
                                     `Porcentaje: ${parseFloat(project.percentage).toFixed(1)}%`,
-                                    `Horas: ${Math.round(project.total_hours)}h / ${Math.round(project.planned_hours)}h`
+                                    `Horas: ${Math.round(project.actual_hours)}h / ${Math.round(project.planned_hours)}h`
                                 ];
                             }
                         }
@@ -475,19 +511,36 @@ const createHoursChart = async () => {
             }
         });
 
-        // Calcular tasa de ocupación
-        const now = new Date();
-        const currentDay = now.getDate();
-        const totalDaysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-        const workingDaysInMonth = Math.min(20, totalDaysInMonth);
-        const currentWorkDay = Math.min(currentDay, workingDaysInMonth);
+        // Actualizar tasa de ocupación
+        const occupancyElement = document.getElementById('occupancyRate');
+        occupancyElement.textContent = `${occupancyData.occupancy_rate}%`;
+        
+        occupancyElement.title = `
+            Horas registradas: ${Math.round(occupancyData.actual_hours)}h
+            Horas esperadas: ${Math.round(occupancyData.expected_hours_to_date)}h
+            Días transcurridos: ${occupancyData.working_days_to_date} de ${occupancyData.working_days_in_month}
+            Total usuarios: ${occupancyData.user_count}
+        `;
+        
+        occupancyElement.className = 'text-3xl font-bold';
+        switch(occupancyData.status) {
+            case 'optimal':
+                occupancyElement.classList.add('stat-value', 'success');
+                break;
+            case 'moderate':
+                occupancyElement.classList.add('stat-value', 'warning');
+                break;
+            default:
+                occupancyElement.classList.add('stat-value', 'danger');
+        }
 
-        updateOccupancyRate(totalHours, workingDaysInMonth, currentWorkDay, totalPlannedHours);
         hideLoader('hoursChartLoader');
         hideLoader('monthlyHoursLoader');
         hideLoader('occupancyRateLoader');
     } catch (error) {
         handleError('hoursChart', error);
+        hideLoader('monthlyHoursLoader');
+        hideLoader('occupancyRateLoader');
     }
 };
 
@@ -513,5 +566,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         ]);
     } catch (error) {
         console.error('Error general al cargar el dashboard:', error);
+        // Ocultar todos los loaders en caso de error general
+        const loaders = [
+            'compensationChartLoader',
+            'companiesChartLoader',
+            'seniorityChartLoader',
+            'maritalChartLoader',
+            'positionsChartLoader',
+            'hoursChartLoader',
+            'totalContractorsLoader',
+            'activeProjectsLoader',
+            'monthlyHoursLoader',
+            'occupancyRateLoader'
+        ];
+        loaders.forEach(hideLoader);
     }
 }); 
