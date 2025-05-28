@@ -29,7 +29,7 @@ const updateTotals = (data, type) => {
 const handleError = (chartId, error) => {
     console.error(`Error loading ${chartId} data:`, error);
     const chartContainer = document.getElementById(chartId).parentElement;
-    chartContainer.innerHTML += `<p class="text-red-500 mt-2">Error al cargar datos</p>`;
+    chartContainer.innerHTML += `<p class="text-red-500 mt-2">Error loading data</p>`;
     
     // Ocultar el loader correspondiente
     const loaderId = `${chartId}Loader`;
@@ -55,9 +55,9 @@ const updateOccupancyRate = (totalHours, workingDaysInMonth, currentWorkDay, mon
     occupancyElement.textContent = `${occupancyRate}%`;
     
     occupancyElement.title = `
-        Horas registradas: ${Math.round(totalHours)}h
-        Horas esperadas a la fecha: ${Math.round(expectedHoursToDate)}h
-        Días transcurridos: ${currentWorkDay} de ${workingDaysInMonth}
+        Hours logged: ${Math.round(totalHours)}h
+        Expected hours to date: ${Math.round(expectedHoursToDate)}h
+        Days elapsed: ${currentWorkDay} of ${workingDaysInMonth}
     `;
     
     occupancyElement.className = 'text-3xl font-bold';
@@ -111,7 +111,7 @@ const createCompensationChart = async () => {
         new Chart(document.getElementById('compensationChart'), {
             type: 'doughnut',
             data: {
-                labels: ['Pago Fijo', 'Por Hora'],
+                labels: ['Fixed Payment', 'Hourly'],
                 datasets: [{
                     data: [data.fixed, data.hourly],
                     backgroundColor: [
@@ -150,7 +150,7 @@ const createCompaniesChart = async () => {
             data: {
                 labels: data.map(d => d.name),
                 datasets: [{
-                    label: 'Contratistas',
+                    label: 'Contractors',
                     data: data.map(d => d.total),
                     backgroundColor: data.map((_, index) => 
                         chartColors.sequential[index % chartColors.sequential.length]
@@ -201,12 +201,12 @@ const createSeniorityChart = async () => {
         // Definir el orden específico de los rangos
         const rangeOrder = ['0-2', '3-5', '6-8', '9-11', '12-20', '21+'];
         const rangeLabels = {
-            '0-2': '0 a 2 años',
-            '3-5': '3 a 5 años',
-            '6-8': '6 a 8 años',
-            '9-11': '9 a 11 años',
-            '12-20': '12 a 20 años',
-            '21+': 'Más de 21 años'
+            '0-2': '0 to 2 years',
+            '3-5': '3 to 5 years',
+            '6-8': '6 to 8 years',
+            '9-11': '9 to 11 years',
+            '12-20': '12 to 20 years',
+            '21+': 'More than 21 years'
         };
 
         // Preparar los datos asegurando que todos los rangos existan
@@ -214,14 +214,14 @@ const createSeniorityChart = async () => {
         
         // Calcular el total
         const total = chartData.reduce((sum, value) => sum + value, 0);
-        document.getElementById('seniorityTotal').textContent = `Total: ${total} personas`;
+        document.getElementById('seniorityTotal').textContent = `Total: ${total} people`;
         
         new Chart(document.getElementById('seniorityChart'), {
             type: 'bar',
             data: {
                 labels: rangeOrder.map(range => rangeLabels[range]),
                 datasets: [{
-                    label: 'Contratistas',
+                    label: 'Contractors',
                     data: chartData,
                     backgroundColor: mainColors.secondary,
                     borderColor: mainColors.secondary,
@@ -242,7 +242,7 @@ const createSeniorityChart = async () => {
                         },
                         title: {
                             display: true,
-                            text: 'Número de Contratistas',
+                            text: 'Number of Contractors',
                             color: chartColors.text.primary
                         }
                     },
@@ -262,7 +262,7 @@ const createSeniorityChart = async () => {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.parsed.y} personas`;
+                                return `${context.parsed.y} people`;
                             }
                         }
                     }
@@ -286,10 +286,10 @@ const createMaritalChart = async () => {
         // Definir el orden específico de los estados civiles
         const statusOrder = ['single', 'married', 'divorced', 'widowed'];
         const statusLabels = {
-            'single': 'Soltero',
-            'married': 'Casado',
-            'divorced': 'Divorciado',
-            'widowed': 'Viudo'
+            'single': 'Single',
+            'married': 'Married',
+            'divorced': 'Divorced',
+            'widowed': 'Widowed'
         };
 
         // Preparar los datos para cada género
@@ -309,14 +309,14 @@ const createMaritalChart = async () => {
                 labels: statusOrder.map(status => statusLabels[status]),
                 datasets: [
                     {
-                        label: 'Hombres',
+                        label: 'Men',
                         data: maleData,
                         backgroundColor: chartColors.gender.male,
                         borderColor: chartColors.gender.male,
                         borderWidth: 1
                     },
                     {
-                        label: 'Mujeres',
+                        label: 'Women',
                         data: femaleData,
                         backgroundColor: chartColors.gender.female,
                         borderColor: chartColors.gender.female,
@@ -362,7 +362,7 @@ const createMaritalChart = async () => {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.y} personas`;
+                                return `${context.dataset.label}: ${context.parsed.y} people`;
                             }
                         }
                     }
@@ -372,7 +372,7 @@ const createMaritalChart = async () => {
 
         // Actualizar el total
         const total = data.reduce((sum, item) => sum + item.total, 0);
-        document.getElementById('maritalTotal').textContent = `Total: ${total} personas`;
+        document.getElementById('maritalTotal').textContent = `Total: ${total} people`;
         hideLoader('maritalChartLoader');
     } catch (error) {
         handleError('maritalChart', error);
@@ -390,7 +390,7 @@ const createPositionsChart = async () => {
             data: {
                 labels: data.map(d => d.position),
                 datasets: [{
-                    label: 'Contratistas',
+                    label: 'Contractors',
                     data: data.map(d => d.total),
                     backgroundColor: mainColors.primary
                 }]
@@ -450,7 +450,7 @@ const createHoursChart = async () => {
             data: {
                 labels: projects.map(d => d.project_name || 'Sin nombre'),
                 datasets: [{
-                    label: '% del Objetivo Mensual',
+                    label: '% of Monthly Target',
                     data: projects.map(d => parseFloat(d.percentage).toFixed(1)),
                     backgroundColor: projects.map(d => {
                         switch(d.status) {
@@ -477,7 +477,7 @@ const createHoursChart = async () => {
                         },
                         title: {
                             display: true,
-                            text: 'Porcentaje Completado',
+                            text: 'Completion Percentage',
                             color: chartColors.text.primary
                         }
                     },
@@ -491,15 +491,15 @@ const createHoursChart = async () => {
                             label: function(context) {
                                 const project = projects[context.dataIndex];
                                 const status = {
-                                    'on-track': 'En tiempo',
-                                    'warning': 'Precaución',
-                                    'over': 'Excedido',
-                                    'behind': 'Atrasado'
+                                    'on-track': 'On track',
+                                    'warning': 'Warning',
+                                    'over': 'Exceeded',
+                                    'behind': 'Behind'
                                 };
                                 return [
-                                    `Estado: ${status[project.status]}`,
-                                    `Porcentaje: ${parseFloat(project.percentage).toFixed(1)}%`,
-                                    `Horas: ${Math.round(project.actual_hours)}h / ${Math.round(project.planned_hours)}h`
+                                    `Status: ${status[project.status]}`,
+                                    `Percentage: ${parseFloat(project.percentage).toFixed(1)}%`,
+                                    `Hours: ${Math.round(project.actual_hours)}h / ${Math.round(project.planned_hours)}h`
                                 ];
                             }
                         }
@@ -516,10 +516,10 @@ const createHoursChart = async () => {
         occupancyElement.textContent = `${occupancyData.occupancy_rate}%`;
         
         occupancyElement.title = `
-            Horas registradas: ${Math.round(occupancyData.actual_hours)}h
-            Horas esperadas: ${Math.round(occupancyData.expected_hours_to_date)}h
-            Días transcurridos: ${occupancyData.working_days_to_date} de ${occupancyData.working_days_in_month}
-            Total usuarios: ${occupancyData.user_count}
+            Hours logged: ${Math.round(occupancyData.actual_hours)}h
+            Expected hours: ${Math.round(occupancyData.expected_hours_to_date)}h
+            Days elapsed: ${occupancyData.working_days_to_date} of ${occupancyData.working_days_in_month}
+            Total users: ${occupancyData.user_count}
         `;
         
         occupancyElement.className = 'text-3xl font-bold';

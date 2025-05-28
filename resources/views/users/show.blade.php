@@ -5,6 +5,10 @@
 @php use App\Enums\Country; @endphp
 
 <x-app-layout>
+    {{-- slot exclusivo para <title> --}}
+    <x-slot name="title">
+        User Detail
+    </x-slot>
     <x-slot name="header">
         {{-- Breadcrumbs --}}
         <nav class="text-sm text-gray-500 mb-1" aria-label="Breadcrumb">
