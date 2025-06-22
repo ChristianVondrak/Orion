@@ -41,19 +41,41 @@ class InvoiceService
         $invoices = collect();
 
         foreach ($workers as $w) {
-            // 1) obtener timmings de este proyecto en el rango
+            $projectUser = $w->projects->first()->pivot;
+            $isFlat = $projectUser->payment_type === 'flat';
+            if ($isFlat) {
+                // Para pagos fijos, el monto es directo
+                $flatRate = round($projectUser->flat_rate, 2);
+                $invoices->push([
+                    'user'               => $w,
+                    'daily'              => [],
+                    'subtotal'           => $flatRate,
+                    'auto_adjustment'    => 0,
+                    'manual_adjustment'  => 0.00,
+                    'activity_index'     => null,
+                    'period'             => $cutoffDate->format('F Y'),
+                    'url'                => route('projects.show', $projectId),
+                    'payment_type'       => 'flat',
+                    'flat_rate'          => $flatRate,
+                    'expected_salary'    => $flatRate,
+                    'estimated_total'    => $flatRate // Para pagos flat, el total estimado es igual al flat rate
+                ]);
+                continue;
+            }
+
+            // Para pagos por hora
             $timings = Timming::where('project_id', $projectId)
                 ->where('user_id', $w->id)
                 ->whereBetween('from_timestamp', [$startTs, $endTs])
                 ->get();
 
-            // 2) agrupar por día
+            // Agrupar por día
             $grouped = $timings->groupBy(fn($t) =>
-            Carbon::createFromTimestamp($t->from_timestamp)
-                ->format('Y-m-d')
+                Carbon::createFromTimestamp($t->from_timestamp)
+                    ->format('Y-m-d')
             );
 
-            $rate    = $w->projects->first()->pivot->hourly_rate;
+            $rate    = $projectUser->hourly_rate;
             $daily   = [];
             $subtotal = 0;
 
@@ -64,10 +86,10 @@ class InvoiceService
                 $subtotal += $amount;
             }
 
-            // 3) activity index
+            // Activity index solo para pagos por hora
             $activityIndex = $timings->avg('activity_level') * 10;
 
-            // 4) ajuste automático
+            // Ajuste automático basado en activity index
             $auto = 0;
             if ($activityIndex > 75 && $activityIndex < 85) {
                 $auto = round($subtotal * 0.1, 2);
@@ -79,15 +101,21 @@ class InvoiceService
                 $auto = round(-$subtotal * 0.1, 2);
             }
 
+            $subtotal = round($subtotal, 2);
+            $estimatedTotal = round($subtotal + $auto, 2); // Calculamos el total estimado incluyendo el ajuste automático
+
             $invoices->push([
                 'user'               => $w,
                 'daily'              => $daily,
-                'subtotal'           => round($subtotal, 2),
+                'subtotal'           => $subtotal,
                 'auto_adjustment'    => $auto,
                 'manual_adjustment'  => 0.00,
                 'activity_index'     => round($activityIndex, 2),
                 'period'             => $cutoffDate->format('F Y'),
-                'url'                => route('project.show', $projectId),
+                'url'                => route('projects.show', $projectId),
+                'payment_type'       => 'hourly',
+                'hourly_rate'        => $rate,
+                'estimated_total'    => $estimatedTotal
             ]);
         }
 

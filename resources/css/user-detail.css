@@ -1,0 +1,42 @@
+/* Overlay global: cubre todo menos el modal activo */
+#global-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 50;
+}
+
+/* Asegurar que dropdown y datepicker queden detrás del overlay */
+#dropdown-menu,
+.daterangepicker {
+    z-index: auto !important;
+}
+
+/* Wrapper del modal tarifas sobre el overlay */
+#rate-form .modal-wrapper {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 60;
+}
+
+@media (min-width: 640px) {
+    #rate-form .modal-wrapper {
+        align-items: center;
+    }
+}
+
+/* Contenido del modal */
+#rate-form .modal-content {
+    background-color: #FFFFFF;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 28rem;
+    overflow: hidden;
+}

@@ -5,12 +5,16 @@
 @php use App\Enums\Country; @endphp
 
 <x-app-layout>
+    {{-- slot exclusivo para <title> --}}
+    <x-slot name="title">
+        User Detail
+    </x-slot>
     <x-slot name="header">
         {{-- Breadcrumbs --}}
         <nav class="text-sm text-gray-500 mb-1" aria-label="Breadcrumb">
             <ol class="list-none p-0 inline-flex">
                 <li class="flex items-center">
-                    <a href="{{ route('home.index') }}" class="hover:underline">Home</a>
+                    <a href="{{ route('home') }}" class="hover:underline">Home</a>
                     <span class="mx-2">/</span>
                 </li>
                 <li class="flex items-center">
@@ -26,6 +30,18 @@
             {{ __('User Detail') }}
         </h2>
     </x-slot>
+
+    {{-- Backdrop global --}}
+    <div id="global-backdrop"></div>
+
+    {{-- Meta CSRF --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    {{-- Cargamos ambos CSS y JS via Vite --}}
+{{--    @vite([
+      'resources/css/user-detail.css',
+      'resources/js/user-detail.js'
+    ])--}}
 
     <div class="mt-6 lg:mx-20 mx-4 md:mx-10">
 
@@ -50,18 +66,27 @@
             <div class="flex items-center gap-4 mb-4">
                 {{-- Botón para mostrar/ocultar el form de detalles --}}
                 <button id="toggle-detail-form"
-                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
                     {{ $user->detail ? 'Edit Details' : 'Add Details' }}
                 </button>
 
                 {{-- Nuevo botón para actualizar tarifas --}}
                 <button id="toggle-rate-form"
-                        class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
-                    Update Hourly Rates
+                        class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                    </svg>
+                    Update Rates
                 </button>
 
                 <button id="toggle-terminate-form"
-                        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                        class="btn btn-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
                     Terminate Contract
                 </button>
             </div>
@@ -152,7 +177,10 @@
 
                 <div class="mt-6">
                     <button type="submit"
-                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                            class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
                         {{ $user->detail ? 'Update Details' : 'Save Details' }}
                     </button>
                 </div>
@@ -184,7 +212,7 @@
                 </div>
                 <div class="mt-6">
                     <button type="submit"
-                            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                            class="btn btn-primary">
                         Confirm
                     </button>
                 </div>
@@ -192,29 +220,157 @@
         </div>
 
 
-        {{-- Formulario de actualización de tarifas --}}
-        <div id="rate-form" class="hidden bg-gray-50 p-6 rounded mt-4 border border-gray-200">
-            <form action="{{ route('user.rate.bulkUpdate', $user->id) }}" method="POST">
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    @foreach($projectUsers as $pu)
-                        <div class="flex items-center gap-2">
-                            <span class="w-1/2">{{ $pu->project->name }}</span>
-                            <input type="text"
-                                   name="rates[{{ $pu->project_id }}]"
-                                   value="{{ old('rates.'.$pu->project_id, $pu->hourly_rate) }}"
-                                   class="w-1/2 border rounded p-1 text-right" />
+        {{-- Formulario de tarifas --}}
+        <div id="rate-form" class="hidden">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-[1100]"></div>
+            <div class="fixed inset-0 z-[1110] overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                    <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
+                        <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
+                            <button type="button"
+                                    class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
+                                    onclick="document.getElementById('rate-form').classList.add('hidden')">
+                                <span class="sr-only">Cerrar</span>
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
-                    @endforeach
+
+                        <form action="{{ route('user.rate.bulkUpdate', $user->id) }}" method="POST">
+                            @csrf
+                            <div class="space-y-6">
+                                <div class="border-b border-gray-200 pb-4">
+                                    <h3 class="text-lg font-medium leading-6 text-gray-900">Rate Configuration</h3>
+                                    <p class="mt-1 text-sm text-gray-500">Update payment type and rates for each project.</p>
+                                </div>
+
+                                <div class="space-y-6">
+                                    @foreach($projectUsers as $pu)
+                                        <div class="bg-gray-50 rounded-lg p-6 transition-all duration-300 hover:shadow-md">
+                                            <h4 class="font-medium text-gray-900 mb-4 flex items-center gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#2563EB]" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0h8v12H6V4z" clip-rule="evenodd" />
+                                                </svg>
+                                                {{ $pu->project->name }}
+                                            </h4>
+
+                                            <div class="space-y-4">
+                                                {{-- Tipo de pago --}}
+                                                <div class="flex flex-wrap gap-4">
+                                                    <label class="relative flex cursor-pointer items-center rounded-full p-3 hover:bg-gray-100" for="hourly-{{ $pu->project_id }}">
+                                                        <input type="radio"
+                                                               name="payment_types[{{ $pu->project_id }}]"
+                                                               id="hourly-{{ $pu->project_id }}"
+                                                               value="hourly"
+                                                               {{ $pu->payment_type === 'hourly' ? 'checked' : '' }}
+                                                               class="relative h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-[#2563EB] transition-all checked:border-[#2563EB] checked:bg-[#2563EB] hover:border-[#2563EB]/80"
+                                                               onchange="toggleRateInputs({{ $pu->project_id }})">
+                                                        <div class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 transition-opacity peer-checked:opacity-100">
+                                                            <div class="absolute left-[7px] top-[7px] h-2.5 w-2.5 rounded-full bg-white"></div>
+                                                        </div>
+                                                        <span class="ml-2 text-gray-700">Hourly Payment</span>
+                                                    </label>
+
+                                                    <label class="relative flex cursor-pointer items-center rounded-full p-3 hover:bg-gray-100" for="flat-{{ $pu->project_id }}">
+                                                        <input type="radio"
+                                                               name="payment_types[{{ $pu->project_id }}]"
+                                                               id="flat-{{ $pu->project_id }}"
+                                                               value="flat"
+                                                               {{ $pu->payment_type === 'flat' ? 'checked' : '' }}
+                                                               class="relative h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-[#2563EB] transition-all checked:border-[#2563EB] checked:bg-[#2563EB] hover:border-[#2563EB]/80"
+                                                               onchange="toggleRateInputs({{ $pu->project_id }})">
+                                                        <div class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 transition-opacity peer-checked:opacity-100">
+                                                            <div class="absolute left-[7px] top-[7px] h-2.5 w-2.5 rounded-full bg-white"></div>
+                                                        </div>
+                                                        <span class="ml-2 text-gray-700">Flat Payment</span>
+                                                    </label>
+                                                </div>
+
+                                                {{-- Tarifa por hora --}}
+                                                <div id="hourly-rate-{{ $pu->project_id }}"
+                                                     class="rate-input {{ $pu->payment_type === 'flat' ? 'hidden' : '' }} transition-all duration-300">
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Hourly Rate ($)</label>
+                                                    <div class="relative rounded-md shadow-sm">
+                                                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                            <span class="text-gray-500 sm:text-sm">$</span>
+                                                        </div>
+                                                        <input type="number"
+                                                               step="0.01"
+                                                               name="hourly_rates[{{ $pu->project_id }}]"
+                                                               value="{{ old('hourly_rates.'.$pu->project_id, $pu->hourly_rate) }}"
+                                                               class="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-[#2563EB] focus:ring-[#2563EB] sm:text-sm"
+                                                               placeholder="0.00">
+                                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                                            <span class="text-gray-500 sm:text-sm">/hour</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Tarifa fija --}}
+                                                <div id="flat-rate-{{ $pu->project_id }}"
+                                                     class="rate-input {{ $pu->payment_type === 'hourly' ? 'hidden' : '' }} transition-all duration-300">
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Flat Rate ($)</label>
+                                                    <div class="relative rounded-md shadow-sm">
+                                                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                            <span class="text-gray-500 sm:text-sm">$</span>
+                                                        </div>
+                                                        <input type="number"
+                                                               step="0.01"
+                                                               name="flat_rates[{{ $pu->project_id }}]"
+                                                               value="{{ old('flat_rates.'.$pu->project_id, $pu->flat_rate) }}"
+                                                               class="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-[#2563EB] focus:ring-[#2563EB] sm:text-sm"
+                                                               placeholder="0.00">
+                                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                                            <span class="text-gray-500 sm:text-sm">/month</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <div class="mt-6 flex justify-end gap-3">
+                                <button type="button"
+                                        onclick="document.getElementById('rate-form').classList.add('hidden')"
+                                        class="btn btn-secondary">
+                                    Cancel
+                                </button>
+                                <button type="submit"
+                                        class="btn btn-primary">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                <div class="mt-6 flex justify-end">
-                    <button type="submit"
-                            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                        Save All Rates
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
+
+        <script>
+            function toggleRateInputs(projectId) {
+                const hourlyDiv = document.getElementById(`hourly-rate-${projectId}`);
+                const flatDiv = document.getElementById(`flat-rate-${projectId}`);
+                const paymentType = document.querySelector(`input[name="payment_types[${projectId}]"]:checked`).value;
+
+                if (paymentType === 'hourly') {
+                    hourlyDiv.classList.remove('hidden');
+                    flatDiv.classList.add('hidden');
+                } else {
+                    hourlyDiv.classList.add('hidden');
+                    flatDiv.classList.remove('hidden');
+                }
+            }
+
+            // Cerrar modal con Escape
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    document.getElementById('rate-form').classList.add('hidden');
+                }
+            });
+        </script>
 
         {{-- Mostrar detalles si existen --}}
         @if($user->detail)

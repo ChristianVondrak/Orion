@@ -1,0 +1,238 @@
+:root {
+    /* Colores principales */
+    --color-primary: #2563EB;
+    --color-secondary: #4F46E5;
+    --color-success: #059669;
+    --color-warning: #D97706;
+    --color-danger: #DC2626;
+    --color-info: #0891B2;
+    --color-purple: #7C3AED;
+    --color-gray: #4B5563;
+
+    /* Colores de texto */
+    --text-primary: #1F2937;
+    --text-secondary: #6B7280;
+    --text-light: #9CA3AF;
+
+    /* Colores de fondo */
+    --bg-white: #FFFFFF;
+    --bg-light: #F3F4F6;
+
+    /* Diseño */
+    --border-radius: 0.5rem;
+    --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --transition: all 0.3s ease;
+}
+
+/* Estilos para los spinners de carga */
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid var(--bg-light);
+    border-top: 5px solid var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+/* Estilos para las tarjetas del dashboard */
+.stat-card {
+    background-color: var(--bg-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    position: relative;
+}
+
+.stat-card:hover {
+    margin-top: -2px;
+    box-shadow: 0 8px 12px -1px rgba(0, 0, 0, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+
+.stat-card .stat-title {
+    color: var(--text-primary);
+    font-size: 1.125rem;
+    font-weight: 500;
+}
+
+.stat-card .stat-value {
+    font-size: 1.875rem;
+    font-weight: 600;
+}
+
+.stat-card .stat-value.success { color: var(--color-success); }
+.stat-card .stat-value.warning { color: var(--color-warning); }
+.stat-card .stat-value.danger { color: var(--color-danger); }
+.stat-card .stat-value.info { color: var(--color-info); }
+
+/* Estilos para los tooltips */
+.tooltip-container {
+    position: relative;
+}
+
+.tooltip-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    min-width: 200px;
+    max-width: 300px;
+    background: var(--bg-white);
+    border: 1px solid var(--bg-light);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    box-shadow: var(--box-shadow);
+    z-index: 20;
+    color: var(--text-primary);
+}
+
+.tooltip-container:hover .tooltip-content {
+    display: block;
+}
+
+/* Estilos para los indicadores de estado */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-secondary);
+}
+
+.status-optimal { color: var(--color-success); }
+.status-moderate { color: var(--color-warning); }
+.status-low { color: var(--color-danger); }
+.status-over { color: var(--color-purple); }
+
+/* Estilos para los gráficos */
+.chart-container {
+    position: relative;
+    height: 16rem;
+    width: 100%;
+    background-color: var(--bg-white);
+}
+
+/* Estilos para los contenedores de gráficos */
+.chart-card {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 1.5rem;
+    transition: var(--transition);
+}
+
+.chart-card:hover {
+    box-shadow: 0 8px 12px -1px rgba(0, 0, 0, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.chart-title {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.chart-total {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Estilos para los tooltips */
+.tooltip-container:hover {
+    z-index: 100;
+}
+
+.tooltip-content:has(.status-indicator) {
+    width: 280px;
+    text-align: left;
+    padding: 12px 16px;
+}
+
+/* Cambiar posición del tooltip cuando está en la parte superior de la pantalla */
+@media (max-height: 800px) {
+    .tooltip-content:has(.status-indicator) {
+        bottom: auto;
+        top: calc(100% + 10px);
+    }
+    
+    /* Ajustar la flecha para que apunte hacia arriba */
+    .tooltip-content:has(.status-indicator)::after {
+        top: auto;
+        bottom: 100%;
+        border-color: transparent transparent #1F2937 transparent;
+    }
+}
+
+.tooltip-content ul {
+    color: #E5E7EB; /* gray-200 */
+}
+
+.tooltip-content li {
+    margin-bottom: 2px;
+}
+
+.tooltip-content .border-t {
+    margin-top: 8px;
+}
+
+/* Flecha del tooltip */
+.tooltip-content::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #1F2937 transparent transparent transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Estilos cuando el tooltip aparece abajo */
+.tooltip-content.tooltip-bottom::after {
+    top: auto;
+    bottom: 100%;
+    border-color: transparent transparent #1F2937 transparent;
+}
+
+/* Mejoras de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+    .stat-card,
+    .chart-card,
+    .tooltip-content {
+        transition: none;
+    }
+    
+    .loading-spinner {
+        animation: none;
+    }
+} 

@@ -27,7 +27,7 @@ class ProjectController extends Controller
         }
 
         // Retrieve a project with associated users and their work timings within a specified date range.
-        $project = Project::with(['projectUsers.worknapUser.timmings' => function ($query) use ($startDate, $endDate) {
+        $project = Project::with(['projectUsers.worksnapUser.timmings' => function ($query) use ($startDate, $endDate) {
             $query->whereBetween('from_timestamp', [$startDate, $endDate]);
         }])->find($id);
 

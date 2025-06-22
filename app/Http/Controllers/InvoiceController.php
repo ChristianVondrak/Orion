@@ -36,10 +36,18 @@ class InvoiceController extends Controller
             $perPage,
             $page,
             [
-                'path'  => route('project.invoices.preview', $project->id),
+                'path'  => route('projects.invoices.preview', $project->id),
                 'query' => $request->only('search'),
             ]
         );
+
+        // 3) Calcular el sueldo esperado para pagos flat
+        foreach ($items as $invoice) {
+            if ($invoice['payment_type'] === 'flat') {
+                $invoice['expected_salary'] = $invoice['flat_rate'];
+                $invoice['subtotal'] = $invoice['flat_rate'];
+            }
+        }
 
         return view('invoices.preview', [
             'project'    => $project,
@@ -57,7 +65,7 @@ class InvoiceController extends Controller
         $svc->sendInvoices($project->id, $cutoff, $manuals);
 
         return redirect()
-            ->route('project.show', $project->id)
+            ->route('projects.show', $project->id)
             ->with('success', 'Invoices enviados correctamente.');
     }
 }

@@ -60,7 +60,7 @@ class ProjectHourDeviationNotification extends Notification
             ->line("Planned: {$this->planned}h")
             ->line("Actual (last week): {$this->actual}h")
             ->line("Deviation: {$this->deviation}%")
-            ->action('View project', route('project.show',$this->project->id));
+            ->action('View project', route('projects.show',$this->project->id));
     }
 
     /**
