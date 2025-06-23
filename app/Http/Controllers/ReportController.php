@@ -26,28 +26,28 @@ class ReportController extends Controller
     {
         $reports = [
             [
-                'title' => 'Login por Profesional',
-                'description' => 'Retrasos de entrada y horario de sesión',
+                'title' => 'Login by Professional',
+                'description' => 'Login delays and session schedule',
                 'route' => route('reports.login'),
             ],
             [
                 'title' => 'Activity Index',
-                'description' => 'Índice de actividad de WorkSnaps',
+                'description' => 'WorkSnaps activity index',
                 'route' => route('reports.activity'),
             ],
             [
-                'title' => 'Nuevos Ingresos',
-                'description' => 'Seguimiento de nuevos profesionales',
+                'title' => 'New Hires',
+                'description' => 'Tracking of new professionals',
                 'route' => route('reports.newHires'),
             ],
             [
-                'title' => 'Actualizaciones de Tarifas',
-                'description' => 'Cambios en el hourly rate',
+                'title' => 'Rate Updates',
+                'description' => 'Changes in hourly rate',
                 'route' => route('reports.rateupdates'),
             ],
             [
-                'title' => 'Destitucion de profesionales independientes',
-                'description' => 'Seguimiento de los profesionales independientes',
+                'title' => 'Contractor Terminations',
+                'description' => 'Tracking of contractor terminations',
                 'route' => route('reports.terminations'),
             ],
         ];
