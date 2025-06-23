@@ -35,7 +35,7 @@ class UserInactivityNotification extends Notification
         return (new MailMessage)
             ->subject("🚨 Inactividad detectada: {$this->worker->first_name} {$this->worker->last_name}")
             ->line("No registra actividad desde hace {$this->days} días.")
-            ->action('Ver perfil', "/user/{$this->worker->id}");
+            ->action('Ver perfil', "/users/{$this->worker->id}");
     }
 
     public function toArray($notifiable): array
@@ -44,7 +44,7 @@ class UserInactivityNotification extends Notification
             'type'      => 'user_inactivity',
             'title'     => "{$this->worker->first_name} {$this->worker->last_name}",
             'message'   => "Sin actividad registrada por {$this->days} días.",
-            'url'       => "/user/{$this->worker->id}",
+            'url'       => "/users/{$this->worker->id}",
             'timestamp' => now()->toISOString(),
         ];
     }

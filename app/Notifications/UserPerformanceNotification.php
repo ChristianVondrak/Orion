@@ -33,7 +33,7 @@ class UserPerformanceNotification extends Notification
             ->subject("🚨 Rendimiento inusual: {$this->worker->first_name} {$this->worker->last_name}")
             ->line("Proyecto: {$this->project->name}")
             ->line("Actividad: {$this->percent}% (fuera de [75%,97%])")
-            ->action('Ver perfil', "/user/{$this->worker->id}");
+            ->action('Ver perfil', "/users/{$this->worker->id}");
     }
 
     public function toArray($notifiable): array
@@ -42,7 +42,7 @@ class UserPerformanceNotification extends Notification
             'type'      => 'user_performance',
             'title'     => "{$this->worker->first_name} {$this->worker->last_name}",
             'message'   => "Rendimiento del {$this->percent}% en proyecto {$this->project->name}.",
-            'url'       => "/user/{$this->worker->id}",
+            'url'       => "/users/{$this->worker->id}",
             'timestamp' => now()->toISOString(),
         ];
     }

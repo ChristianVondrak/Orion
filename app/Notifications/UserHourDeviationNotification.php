@@ -33,7 +33,7 @@ class UserHourDeviationNotification extends Notification
     }
 
     /**
-     * Get the notification’s delivery channels.
+     * Get the notification's delivery channels.
      *
      * @param  mixed  $notifiable
      * @return array<int,string>
@@ -56,7 +56,7 @@ class UserHourDeviationNotification extends Notification
             ->line("Planned hours: {$this->planned}h")
             ->line("Actual hours: {$this->actual}h")
             ->line("Deviation: {$this->deviation}%")
-            ->action('View Worker', "/user/{$this->worker->id}");
+            ->action('View Worker', "/users/{$this->worker->id}");
     }
 
     /**
@@ -71,7 +71,7 @@ class UserHourDeviationNotification extends Notification
             'type'      => 'user_deviation',
             'title'     => $this->worker->first_name . ' ' . $this->worker->last_name,
             'message'   => "Deviation of {$this->deviation}% in weekly hours.",
-            'url'       => "/user/{$this->worker->id}",
+            'url'       => "/users/{$this->worker->id}",
             'timestamp' => now()->toISOString(),
         ];
     }
