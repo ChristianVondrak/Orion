@@ -7,6 +7,7 @@ use App\Models\worksnapUser;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StatsService
 {
@@ -33,10 +34,13 @@ class StatsService
             ->filter->isWeekday()
             ->count();
 
-        // 3) Usuarios activos (con email)
+        // 3) Usuarios activos (con email y pago por hora)
         $userCount = worksnapUser::query()
             ->whereNotNull('email')
             ->where('email', '<>', '')
+            ->whereHas('projectUsers', function ($q) {
+                $q->where('payment_type', 'hourly');
+            })
             ->count();
 
         // 4) Horas esperadas hasta la fecha
@@ -91,20 +95,31 @@ class StatsService
         Carbon $end,
         int $hoursPerDay = 8
     ): Collection {
-        // días laborales del mes
+        // días laborales del mes completo
         $periodMonth = CarbonPeriod::create($start, '1 day', $end);
         $workingDays = collect($periodMonth)
             ->filter->isWeekday()
             ->count();
 
-        return Project::whereHas('projectUsers')
-            ->withCount('projectUsers')
-            ->get()
-            ->map(function ($project) use ($start, $end, $hoursPerDay, $workingDays) {
-                $userCount = $project->project_users_count;
+        // días laborales transcurridos hasta hoy
+        $today = min(Carbon::now(), $end);
+        $periodToDate = CarbonPeriod::create($start, '1 day', $today);
+        $workingDaysToDate = collect($periodToDate)
+            ->filter->isWeekday()
+            ->count();
 
-                // Horas planificadas: usuarios × horas/día × días hábiles
-                $planned = $userCount * $hoursPerDay * $workingDays;
+        return Project::whereHas('projectUsers', function($q) {
+                $q->where('payment_type', 'hourly');
+            })
+            ->get()
+            ->map(function ($project) use ($start, $end, $hoursPerDay, $workingDaysToDate) {
+                // Solo usuarios con pago por hora
+                $userCount = $project->projectUsers()
+                    ->where('payment_type', 'hourly')
+                    ->count();
+
+                // Horas planificadas hasta la fecha: usuarios × horas/día × días hábiles transcurridos
+                $planned = $userCount * $hoursPerDay * $workingDaysToDate;
 
                 // Horas reales
                 $seconds = $project->timmings()

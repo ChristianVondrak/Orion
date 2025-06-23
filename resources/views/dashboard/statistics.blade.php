@@ -141,6 +141,23 @@
                     </div>
                 </div>
 
+                {{-- Hours by Project (movido aquí) --}}
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Hours Completion by Project</h3>
+                        <div class="text-sm text-gray-500" id="hoursTotal"></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="loading-overlay" id="hoursChartLoader">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <canvas id="hoursChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Second Row of Charts --}}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {{-- Companies --}}
                 <div class="chart-card">
                     <div class="chart-header">
@@ -154,10 +171,7 @@
                         <canvas id="companiesChart"></canvas>
                     </div>
                 </div>
-            </div>
 
-            {{-- Second Row of Charts --}}
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {{-- Seniority --}}
                 <div class="chart-card">
                     <div class="chart-header">
@@ -171,7 +185,10 @@
                         <canvas id="seniorityChart"></canvas>
                     </div>
                 </div>
+            </div>
 
+            {{-- Third Row of Charts --}}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {{-- Marital Status by Gender --}}
                 <div class="chart-card">
                     <div class="chart-header">
@@ -185,10 +202,7 @@
                         <canvas id="maritalChart"></canvas>
                     </div>
                 </div>
-            </div>
 
-            {{-- Third Row of Charts --}}
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {{-- Positions --}}
                 <div class="chart-card">
                     <div class="chart-header">
@@ -200,20 +214,6 @@
                             <div class="loading-spinner"></div>
                         </div>
                         <canvas id="positionsChart"></canvas>
-                    </div>
-                </div>
-
-                {{-- Hours by Project --}}
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3 class="chart-title">Hours Completion by Project</h3>
-                        <div class="text-sm text-gray-500" id="hoursTotal"></div>
-                    </div>
-                    <div class="chart-container">
-                        <div class="loading-overlay" id="hoursChartLoader">
-                            <div class="loading-spinner"></div>
-                        </div>
-                        <canvas id="hoursChart"></canvas>
                     </div>
                 </div>
             </div>

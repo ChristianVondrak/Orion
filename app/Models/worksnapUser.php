@@ -55,7 +55,7 @@ class worksnapUser extends Model
      */
     public function projectUsers(): HasMany
     {
-        return $this->hasMany(projectUser::class);
+        return $this->hasMany(projectUser::class, 'user_id', 'id');
     }
 
     public function plannedHours()
