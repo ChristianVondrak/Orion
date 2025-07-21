@@ -96,6 +96,7 @@ Route::middleware([
         Route::get('/new-hires', [ReportController::class, 'newHires'])->name('newHires');
         Route::get('/rate-updates', [ReportController::class, 'rateUpdates'])->name('rateupdates');
         Route::get('/terminations', [ReportController::class, 'terminations'])->name('terminations');
+        Route::get('/annual-hours', [ReportController::class, 'annualHours'])->name('annualhours');
         Route::get('/{type}/export', [ReportController::class, 'export'])->name('export');
     });
 

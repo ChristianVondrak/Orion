@@ -6,6 +6,7 @@ use App\Exports\HourlyRateUpdatesExport;
 use App\Exports\NewHiresExport;
 use App\Http\Requests\ActivityIndexReportRequest;
 use App\Models\HourlyRateUpdate;
+use App\Models\Project;
 use App\Services\Report;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
@@ -19,6 +20,7 @@ use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\AnnualHoursReportService;
 
 class ReportController extends Controller
 {
@@ -319,6 +321,54 @@ class ReportController extends Controller
             'rows'  => $rows,
             'start' => $start->format('Y/m/d'),
             'end'   => $end->format('Y/m/d'),
+        ]);
+    }
+
+    /**
+     * Reporte anual de horas trabajadas por profesional,
+     * agrupadas por mes y filtrables por proyecto.
+     */
+    public function annualHours(Request $request, AnnualHoursReportService $reportService)
+    {
+        // 1) Validar inputs
+        $validated = $request->validate([
+            'year'       => ['integer','min:2000','max:' . now()->year],
+            'project_id' => ['nullable','exists:projects,id'],
+            'export'     => ['nullable','in:excel,pdf'],
+        ]);
+
+        // 2) Preparar parámetros con valores por defecto
+        $year        = (int) ($validated['year'] ?? now()->year);
+        $projectId   = $validated['project_id'] ?? null;
+        $export      = $validated['export'] ?? null;
+
+        // 3) Delegar al servicio la obtención de datos
+        $data = $reportService->getAnnualHoursData($year, $projectId);
+
+        // 4) Exportar Excel si se solicita
+        if ($export === 'excel') {
+            return Excel::download(
+                new AnnualHoursExport($data, $year),
+                "annual-hours-{$year}.xlsx"
+            );
+        }
+
+        // 5) Exportar PDF si se solicita
+        if ($export === 'pdf') {
+            $pdf = Pdf::loadView('reports.annual_hours_pdf', compact('data', 'year'))
+                      ->setPaper('a4', 'landscape');
+
+            return $pdf->download("annual-hours-{$year}.pdf");
+        }
+
+        // 6) Renderizar vista web
+        $projects = Project::orderBy('name')->get(['id', 'name']);
+
+        return view('reports.annual_hours', [
+            'data'            => $data,
+            'year'            => $year,
+            'projects'        => $projects,
+            'selectedProject' => $projectId,
         ]);
     }
 }
