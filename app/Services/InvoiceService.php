@@ -156,7 +156,7 @@ class InvoiceService
 
         // En local solo enviamos el primero para tu demo
         if (app()->environment('local') && $prepared->isNotEmpty()) {
-            $inv = $prepared[2];
+            $inv = $prepared[1];
             Mail::to('christianvondrak99@gmail.com')->send(new InvoiceMail($inv));
 
             $phone = "+584126054663";

@@ -100,7 +100,7 @@
                     </button>
 
                     <!-- Dropdown -->
-                    <div x-show="notifOpen" @click.away="notifOpen = false"
+                    <div x-show="notifOpen" x-cloak @click.away="notifOpen = false"
                          class="origin-top-right absolute right-0 mt-2 w-96 bg-white border rounded shadow-lg z-50">
                         <div class="max-h-64 overflow-y-auto">
                             @forelse($unread as $note)
