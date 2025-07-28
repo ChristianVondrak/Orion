@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 
 class Timming extends Model
 {
@@ -43,5 +44,21 @@ class Timming extends Model
             $this->from_timestamp,
             'America/Caracas')
             ->format('d. F Y, g:i A');
+    }
+
+    /**
+     * Filtrar por proyecto (sin lógica condicional).
+     */
+    public function scopeByProject(Builder $query, int $projectId): Builder
+    {
+        return $query->where('project_id', $projectId);
+    }
+
+    /**
+     * Filtrar registros entre dos timestamps dados.
+     */
+    public function scopeBetweenDates(Builder $query, int $start, int $end): Builder
+    {
+        return $query->whereBetween('from_timestamp', [$start, $end]);
     }
 }
