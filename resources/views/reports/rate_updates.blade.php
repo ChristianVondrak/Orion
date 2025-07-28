@@ -53,14 +53,20 @@
                 </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                @foreach($rows as $r)
+                @forelse($rows as $r)
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">{{ $r->name }}</td>
                         <td class="px-6 py-4">{{ $r->updated_at }}</td>
                         <td class="px-6 py-4">${{ number_format($r->previous_rate,2) }}</td>
                         <td class="px-6 py-4">${{ number_format($r->new_rate,2) }}</td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500 italic">
+                            No records found for the selected date range.
+                        </td>
+                    </tr>
+                @endforelse
                 </tbody>
             </table>
         </div>

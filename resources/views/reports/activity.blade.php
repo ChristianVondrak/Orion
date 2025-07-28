@@ -58,6 +58,7 @@
         </div>
 
         {{-- Tabla simplificada --}}
+        {{-- Tabla --}}
         <div class="bg-white p-6 rounded shadow overflow-auto">
             <table class="min-w-full table-auto">
                 <thead class="bg-gray-50 sticky top-0">
@@ -68,24 +69,31 @@
                 </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                @foreach($rows as $r)
+                @forelse($rows as $r)
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">{{ $r->name }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">{{ $r->email }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span @class([
-                                'px-2 inline-flex text-xs font-semibold rounded-full',
-                                'bg-green-100 text-green-800' => $r->activity_index >= 75,
-                                'bg-red-100   text-red-800'   => $r->activity_index < 75,
-                            ])>
-                                {{ $r->activity_index }}%
-                            </span>
+                                <span @class([
+                                    'px-2 inline-flex text-xs font-semibold rounded-full',
+                                    'bg-green-100 text-green-800' => $r->activity_index >= 75,
+                                    'bg-red-100   text-red-800'   => $r->activity_index < 75,
+                                ])>
+                                    {{ $r->activity_index }}%
+                                </span>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-center text-gray-500 italic">
+                            No records found for the selected date range.
+                        </td>
+                    </tr>
+                @endforelse
                 </tbody>
             </table>
         </div>
+
         {{-- Paginación --}}
         <div class="mt-4">
             {{ $rows->links() }}
