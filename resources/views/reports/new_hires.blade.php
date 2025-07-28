@@ -45,14 +45,20 @@
                 </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                @foreach($rows as $r)
+                @forelse($rows as $r)
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">{{ $r->name }}</td>
                         <td class="px-6 py-4">{{ $r->country }}</td>
                         <td class="px-6 py-4">{{ $r->position }}</td>
                         <td class="px-6 py-4">{{ $r->start_date }}</td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500 italic">
+                            No records found for the selected date range.
+                        </td>
+                    </tr>
+                @endforelse
                 </tbody>
             </table>
         </div>

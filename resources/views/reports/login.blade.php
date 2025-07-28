@@ -68,35 +68,41 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach($rows as $row)
-                                    <tr class="{{ $row->is_delayed ? 'bg-red-50' : '' }}">
-                                        <td class="px-6 py-4 whitespace-no-wrap">
-                                            {{ $row->name }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-no-wrap">
-                                            {{ $row->email }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-no-wrap">
-                                            <div>{{ $row->first_login }}</div>
-                                            <div class="{{ strtotime($row->first_login_time) > strtotime('9:00 AM') ? 'text-red-600 font-semibold' : 'text-green-600' }}">
-                                                {{ $row->first_login_time }}
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-no-wrap">
-                                            <div>{{ $row->last_login }}</div>
-                                            <div>{{ $row->last_login_time }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-no-wrap {{ strtotime($row->average_start_time) > strtotime('9:00 AM') ? 'text-red-600 font-semibold' : 'text-green-600' }}">
-                                            {{ $row->average_start_time }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-no-wrap {{ $row->delays_count > 0 ? 'text-red-600 font-semibold' : 'text-green-600' }}">
-                                            {{ $row->delays_count }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-no-wrap {{ $row->is_severely_delayed ? 'text-red-600 font-bold' : ($row->total_delay_minutes > 0 ? 'text-yellow-600' : 'text-green-600') }}">
-                                            {{ $row->total_delay_minutes_formatted }}
-                                        </td>
-                                    </tr>
-                                @endforeach
+                            @forelse($rows as $row)
+                                <tr class="{{ $row->is_delayed ? 'bg-red-50' : '' }}">
+                                    <td class="px-6 py-4 whitespace-no-wrap">
+                                        {{ $row->name }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-no-wrap">
+                                        {{ $row->email }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-no-wrap">
+                                        <div>{{ $row->first_login }}</div>
+                                        <div class="{{ strtotime($row->first_login_time) > strtotime('9:00 AM') ? 'text-red-600 font-semibold' : 'text-green-600' }}">
+                                            {{ $row->first_login_time }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-no-wrap">
+                                        <div>{{ $row->last_login }}</div>
+                                        <div>{{ $row->last_login_time }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-no-wrap {{ strtotime($row->average_start_time) > strtotime('9:00 AM') ? 'text-red-600 font-semibold' : 'text-green-600' }}">
+                                        {{ $row->average_start_time }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-no-wrap {{ $row->delays_count > 0 ? 'text-red-600 font-semibold' : 'text-green-600' }}">
+                                        {{ $row->delays_count }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-no-wrap {{ $row->is_severely_delayed ? 'text-red-600 font-bold' : ($row->total_delay_minutes > 0 ? 'text-yellow-600' : 'text-green-600') }}">
+                                        {{ $row->total_delay_minutes_formatted }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="px-6 py-4 text-center text-gray-500 italic">
+                                        No records found for the selected date range.
+                                    </td>
+                                </tr>
+                            @endforelse
                             </tbody>
                         </table>
 
@@ -122,4 +128,4 @@
             });
         });
     </script>
-</x-app-layout> 
+</x-app-layout>
