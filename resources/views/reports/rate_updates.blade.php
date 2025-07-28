@@ -9,8 +9,12 @@
         {{-- Filters & Export --}}
         <div class="flex items-center justify-between mb-6">
             <form method="GET" action="{{ route('reports.rateupdates') }}" class="flex items-center gap-3">
-                <input type="number" name="year" min="2000" max="{{ now()->year }}"
-                       value="{{ $year }}" class="w-24 border rounded p-2" />
+                <label for="year">Year:</label>
+                <select name="year" id="year" class="border rounded pl-2 pr-8 py-2">
+                    @for($y = now()->year; $y >= now()->year - 5; $y--)
+                        <option value="{{ $y }}" @if($year == $y) selected @endif>{{ $y }}</option>
+                    @endfor
+                </select>
                 <input type="hidden" name="export" value="">
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                     Filter

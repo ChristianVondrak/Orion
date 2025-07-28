@@ -7,7 +7,7 @@
 
     <div class="py-12 lg:mx-20 mx-4 md:mx-10">
         <div class="flex items-center justify-between mb-6">
-            <form method="GET" action="{{ route('reports.annualhours') }}" class="flex items-center gap-4">
+            <form method="GET" action="{{ route('reports.annualHours') }}" class="flex items-center gap-4">
                 <label for="year">Year:</label>
                 <select name="year" id="year" class="border rounded pl-2 pr-8 py-2">
                     @for($y = now()->year; $y >= now()->year - 5; $y--)
@@ -24,9 +24,9 @@
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Filter</button>
             </form>
             <div class="flex gap-2">
-                <a href="{{ route('reports.annualhours', array_merge(request()->only(['year','project_id']), ['export'=>'excel'])) }}"
+                <a href="{{ route('reports.annualHours', array_merge(request()->only(['year','project_id']), ['export'=>'excel'])) }}"
                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Excel</a>
-                <a href="{{ route('reports.annualhours', array_merge(request()->only(['year','project_id']), ['export'=>'pdf'])) }}"
+                <a href="{{ route('reports.annualHours', array_merge(request()->only(['year','project_id']), ['export'=>'pdf'])) }}"
                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">PDF</a>
             </div>
         </div>
@@ -64,4 +64,4 @@
             </table>
         </div>
     </div>
-</x-app-layout> 
+</x-app-layout>

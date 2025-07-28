@@ -26,23 +26,23 @@ Route::middleware([
         // Get compensation structure data
         Route::get('/compensation', [StatisticsController::class, 'compensationStructure'])
             ->name('compensation');
-        
+
         // Get contractors per company statistics
         Route::get('/companies', [StatisticsController::class, 'contractorsPerCompany'])
             ->name('companies');
-        
+
         // Get contractors seniority distribution
         Route::get('/seniority', [StatisticsController::class, 'contractorsSeniority'])
             ->name('seniority');
-        
+
         // Get marital status distribution by gender
         Route::get('/marital-status', [StatisticsController::class, 'maritalStatusByGender'])
             ->name('marital-status');
-        
+
         // Get contractors distribution by position
         Route::get('/positions', [StatisticsController::class, 'contractorsPerPosition'])
             ->name('positions');
-        
+
         // Get project completion statistics
         Route::get('/project-completion', [StatisticsController::class, 'projectHourCompletion'])
             ->name('project-completion');
@@ -56,11 +56,11 @@ Route::middleware([
     Route::prefix('projects')->name('projects.')->group(function () {
         Route::get('/', [HomeController::class, 'index'])->name('index');
         Route::get('/{id}', [ProjectController::class, 'show'])->name('show');
-        
+
         // Project planned hours
         Route::post('/{project}/planned-hours', [PlannedProjectHourController::class,'store'])
             ->name('planned-hours.store');
-            
+
         // Project invoices
         Route::get('/{project}/invoices/preview', [InvoiceController::class,'preview'])
             ->name('invoices.preview');
@@ -72,17 +72,17 @@ Route::middleware([
     Route::prefix('users')->name('user.')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('index');
         Route::get('/{id}', [UserController::class, 'show'])->name('show');
-        
+
         // User details
         Route::post('/{user}/details', [UserDetailController::class, 'store'])
             ->name('details.store');
         Route::put('/{user}/details', [UserDetailController::class, 'update'])
             ->name('details.update');
-        
+
         // User termination
         Route::post('/{user}/termination', [UserTerminationController::class, 'store'])
             ->name('termination.store');
-        
+
         // Hourly rates
         Route::post('/{user}/hourly-rates', [UserController::class, 'bulkUpdateHourlyRates'])
             ->name('rate.bulkUpdate');
@@ -96,7 +96,7 @@ Route::middleware([
         Route::get('/new-hires', [ReportController::class, 'newHires'])->name('newHires');
         Route::get('/rate-updates', [ReportController::class, 'rateUpdates'])->name('rateupdates');
         Route::get('/terminations', [ReportController::class, 'terminations'])->name('terminations');
-        Route::get('/annual-hours', [ReportController::class, 'annualHours'])->name('annualhours');
+        Route::get('/annual-hours', [ReportController::class, 'annualHours'])->name('annualHours');
         Route::get('/{type}/export', [ReportController::class, 'export'])->name('export');
     });
 

@@ -2,78 +2,109 @@
 
 namespace App\Exports;
 
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Carbon\Carbon;
 
 class AnnualHoursExport implements FromCollection, WithHeadings, WithStyles
 {
-    protected $rows;
-    protected $year;
+    private Collection $rows;
+    private int $year;
 
-    public function __construct($rows, $year)
+    private const MONTHS_IN_YEAR    = 12;
+    private const MONTHLY_MIN_HOURS = 160;
+    private const TOTAL_MIN_HOURS   = self::MONTHLY_MIN_HOURS * self::MONTHS_IN_YEAR;
+
+    private array $monthLabels;
+
+    public function __construct(Collection $rows, int $year)
     {
-        $this->rows = $rows;
-        $this->year = $year;
+        $this->rows        = $rows;
+        $this->year        = $year;
+        $this->monthLabels = $this->generateMonthLabels();
     }
 
-    public function collection()
+    public function collection(): Collection
     {
-        return collect($this->rows)->map(function($r) {
-            $row = [
-                'Nombre' => $r['name'],
-                'Email' => $r['email'],
-            ];
-            for ($m = 1; $m <= 12; $m++) {
-                $row[__('Mes').' '.$m] = $r['months'][$m] ?? 0;
-            }
-            $row['Total'] = array_sum($r['months']);
-            return $row;
-        });
+        return $this->rows->map(fn(array $row) => $this->formatRow($row));
     }
 
     public function headings(): array
     {
-        $headings = ['Nombre', 'Email'];
-        for ($m = 1; $m <= 12; $m++) {
-            $headings[] = __(\Carbon\Carbon::create()->month($m)->locale('es')->isoFormat('MMM'));
-        }
-        $headings[] = 'Total';
-        return $headings;
+        return array_merge(['Name', 'Email'], $this->monthLabels, ['Total']);
     }
 
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet): array
     {
-        // Encabezados en negrita
-        $sheet->getStyle('A1:N1')->getFont()->setBold(true);
-        $rowCount = count($this->rows);
-        // Para cada fila de datos
-        for ($i = 0; $i < $rowCount; $i++) {
-            $row = $this->rows[$i];
-            // Meses: columnas C a N (3 a 14)
-            for ($col = 3; $col <= 14; $col++) {
-                $hours = $row['months'][$col-2] ?? 0;
-                $cell = $sheet->getCellByColumnAndRow($col, $i+2)->getCoordinate();
-                if ($hours < 160 && $hours > 0) {
-                    $sheet->getStyle($cell)->getFill()->setFillType('solid')->getStartColor()->setRGB('fee2e2');
-                    $sheet->getStyle($cell)->getFont()->getColor()->setRGB('b91c1c');
-                } elseif ($hours >= 160) {
-                    $sheet->getStyle($cell)->getFill()->setFillType('solid')->getStartColor()->setRGB('dcfce7');
-                    $sheet->getStyle($cell)->getFont()->getColor()->setRGB('166534');
+        // bold header
+        $sheet->getStyle('A1:' . $sheet->getCellByColumnAndRow(self::MONTHS_IN_YEAR + 2, 1)->getCoordinate())
+            ->getFont()
+            ->setBold(true);
+
+        foreach ($this->rows as $i => $row) {
+            $excelRow = $i + 2;
+            // estilo mensual
+            for ($col = 3; $col <= self::MONTHS_IN_YEAR + 2; $col++) {
+                $hours = $row['months'][$col - 2] ?? 0;
+                $cell  = $sheet->getCellByColumnAndRow($col, $excelRow)->getCoordinate();
+
+                if ($hours > 0 && $hours < self::MONTHLY_MIN_HOURS) {
+                    $this->applyCellStyle($sheet, $cell, 'fee2e2', 'b91c1c');
+                } elseif ($hours >= self::MONTHLY_MIN_HOURS) {
+                    $this->applyCellStyle($sheet, $cell, 'dcfce7', '166534');
                 }
             }
-            // Total: columna O (15)
-            $total = array_sum($row['months']);
-            $cellTotal = $sheet->getCellByColumnAndRow(15, $i+2)->getCoordinate();
-            if ($total < 160*12 && $total > 0) {
-                $sheet->getStyle($cellTotal)->getFill()->setFillType('solid')->getStartColor()->setRGB('fee2e2');
-                $sheet->getStyle($cellTotal)->getFont()->getColor()->setRGB('b91c1c');
-            } elseif ($total >= 160*12) {
-                $sheet->getStyle($cellTotal)->getFill()->setFillType('solid')->getStartColor()->setRGB('dcfce7');
-                $sheet->getStyle($cellTotal)->getFont()->getColor()->setRGB('166534');
+
+            // estilo total
+            $totalCell = $sheet->getCellByColumnAndRow(self::MONTHS_IN_YEAR + 3, $excelRow)->getCoordinate();
+            $total     = array_sum($row['months'] ?? []);
+
+            if ($total > 0 && $total < self::TOTAL_MIN_HOURS) {
+                $this->applyCellStyle($sheet, $totalCell, 'fee2e2', 'b91c1c');
+            } elseif ($total >= self::TOTAL_MIN_HOURS) {
+                $this->applyCellStyle($sheet, $totalCell, 'dcfce7', '166534');
             }
         }
+
         return [];
     }
-} 
+
+    private function generateMonthLabels(): array
+    {
+        $labels = [];
+        for ($m = 1; $m <= self::MONTHS_IN_YEAR; $m++) {
+            $labels[] = Carbon::create()->month($m)->isoFormat('MMM');
+        }
+        return $labels;
+    }
+
+    private function formatRow(array $row): array
+    {
+        $formatted = [
+            'Name'  => $row['name']  ?? '',
+            'Email' => $row['email'] ?? '',
+        ];
+
+        foreach ($this->monthLabels as $index => $label) {
+            $formatted[$label] = $row['months'][$index + 1] ?? 0;
+        }
+
+        $formatted['Total'] = array_sum($row['months'] ?? []);
+        return $formatted;
+    }
+
+    private function applyCellStyle(Worksheet $sheet, string $cell, string $fill, string $font): void
+    {
+        $style = $sheet->getStyle($cell);
+        $style->getFill()
+            ->setFillType('solid')
+            ->getStartColor()
+            ->setRGB($fill);
+        $style->getFont()
+            ->getColor()
+            ->setRGB($font);
+    }
+}

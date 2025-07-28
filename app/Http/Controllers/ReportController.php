@@ -2,373 +2,162 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ActivityIndexExport;
 use App\Exports\HourlyRateUpdatesExport;
 use App\Exports\NewHiresExport;
-use App\Http\Requests\ActivityIndexReportRequest;
-use App\Models\HourlyRateUpdate;
-use App\Models\Project;
+use App\Exports\TerminationsExport;
+use App\Exports\LoginReportExport;
+use App\Exports\AnnualHoursExport;
+use App\Http\Requests\RateUpdatesRequest;
+use App\Http\Requests\ReportRangeRequest;
+use App\Http\Requests\AnnualHoursRequest;
 use App\Services\Report;
-use Carbon\Carbon;
-use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\AnnualHoursReportService;
+use App\Models\Project;
+use App\Http\Controllers\Traits\HandlesReports;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Http\Response;
 
 class ReportController extends Controller
 {
-    public function index()
+    use HandlesReports;
+
+    /**
+     * Show the list of available reports.
+     */
+    public function index(): Response
     {
         $reports = [
-            [
-                'title' => 'Login by Professional',
-                'description' => 'Login delays and session schedule',
-                'route' => route('reports.login'),
-            ],
-            [
-                'title' => 'Activity Index',
-                'description' => 'WorkSnaps activity index',
-                'route' => route('reports.activity'),
-            ],
-            [
-                'title' => 'New Hires',
-                'description' => 'Tracking of new professionals',
-                'route' => route('reports.newHires'),
-            ],
-            [
-                'title' => 'Rate Updates',
-                'description' => 'Changes in hourly rate',
-                'route' => route('reports.rateupdates'),
-            ],
-            [
-                'title' => 'Contractor Terminations',
-                'description' => 'Tracking of contractor terminations',
-                'route' => route('reports.terminations'),
-            ],
+            ['title' => 'Login by Professional',   'description' => 'Login delays and session schedule',   'route' => route('reports.login')],
+            ['title' => 'Activity Index',          'description' => 'WorkSnaps activity index',             'route' => route('reports.activity')],
+            ['title' => 'New Hires',               'description' => 'Tracking of new professionals',       'route' => route('reports.newHires')],
+            ['title' => 'Rate Updates',            'description' => 'Changes in hourly rate',              'route' => route('reports.rateupdates')],
+            ['title' => 'Contractor Terminations', 'description' => 'Tracking of contractor terminations', 'route' => route('reports.terminations')],
+            ['title' => 'Annual Hours',            'description' => 'Annual hours per professional',       'route' => route('reports.annualHours')],
         ];
 
-        return view('reports.index', compact('reports'));
+        return response()->view('reports.index', compact('reports'));
     }
 
     /**
-     * Display the Activity Index report, with optional filtering and export.
-     *
-     * This method handles:
-     *  1. Parsing 'start' and 'end' date parameters from the request, defaulting
-     *     to the first and last day of the current month if missing or invalid.
-     *  2. Exporting the full dataset to Excel or PDF when the 'export' query
-     *     parameter is set to 'excel' or 'pdf'.
-     *  3. Paginating the result set for normal HTML display when no export is
-     *     requested.
-     *
-     * @param Request $request
-     * @param Report $reportService
-     * @return Application|Factory|View|\Illuminate\Foundation\Application|Response|\Illuminate\View\View|BinaryFileResponse
+     * Activity Index report (paginated & exportable).
      */
-    public function activityIndex(Request $request, Report $reportService)
+    public function activityIndex(ReportRangeRequest $request, Report $service): Response
     {
-        $start = Carbon::now()->startOfMonth();
-        $end   = Carbon::now()->endOfMonth();
-
-        if ($request->filled('start') && $request->filled('end')) {
-            try {
-                $start = Carbon::parse($request->query('start'))->startOfDay();
-            } catch (\Exception $e) {
-                $start = Carbon::now()->startOfMonth();
-            }
-            try {
-                $end = Carbon::parse($request->query('end'))->endOfDay();
-            } catch (\Exception $e) {
-                $end = Carbon::now()->endOfMonth();
-            }
-        }
-
-        if ($request->export === 'excel') {
-            $allRows = $reportService->getAllActivityIndexData($start, $end);
-            return Excel::download(
-                new \App\Exports\ActivityIndexExport($allRows->toArray()),
-                'activity-index_'.$start->format('Ymd').'-'.$end->format('Ymd').'.xlsx'
-            );
-        }
-        if ($request->export === 'pdf') {
-            $allRows = $reportService->getAllActivityIndexData($start, $end);
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.activity_pdf', [
-                'rows'  => $allRows,
-                'start' => $start->format('Y/m/d'),
-                'end'   => $end->format('Y/m/d'),
-            ])->setPaper('a4','landscape');
-            return $pdf->download('activity-index_'.$start->format('Ymd').'-'.$end->format('Ymd').'.pdf');
-        }
-
-        $rows = $reportService
-            ->getActivityIndexData($start, $end, 15)
-            ->appends($request->only(['start','end']));
-
-        return view('reports.activity', compact('rows','start','end'));
+        return $this->serveReport(
+            $request,
+            [$service, 'getActivityIndexData'],       // paginated
+            [$service, 'getAllActivityIndexData'],    // full data for export
+            'reports.activity',                       // HTML view
+            ActivityIndexExport::class,               // Excel export class
+            'reports.activity_pdf',                   // PDF view
+            'activity-index'                          // filename prefix
+        );
     }
 
     /**
-     * Display or export the Hourly Rate Updates report.
-     *
-     * @param Request $request
-     * @param Report $reportService
-     * @return Application|Factory|View|\Illuminate\Foundation\Application|Response|\Illuminate\View\View|BinaryFileResponse
+     * Hourly Rate Updates report.
      */
-    public function rateUpdates(Request $request, Report $reportService)
+    public function rateUpdates(RateUpdatesRequest $request, Report $service): Response
     {
-        // 1) Parse date range (default: current year)
-        $start = Carbon::now()->startOfYear();
-        $end   = Carbon::now()->endOfYear();
+        $year = $request->getYear();
 
-        if ($request->filled('year')) {
-            $year = intval($request->year);
-            $start = Carbon::create($year, 1, 1)->startOfDay();
-            $end   = Carbon::create($year, 12, 31)->endOfDay();
-        }
-        if ($request->filled('start') && $request->filled('end')) {
-            try {
-                $start = Carbon::parse($request->start)->startOfDay();
-                $end   = Carbon::parse($request->end)->endOfDay();
-            } catch (\Exception $e) {
-                // ignore invalid, keep year-range
-            }
-        }
-
-        // 2) Export to Excel?
-        if ($request->query('export') === 'excel') {
-            $allRows = $reportService->getAllHourlyRateUpdatesData($start, $end);
-            return Excel::download(
-                new HourlyRateUpdatesExport($allRows->toArray()),
-                'hourly-rate-updates_'.$start->format('Ymd').'-'.$end->format('Ymd').'.xlsx'
-            );
-        }
-
-        // 3) Export to PDF?
-        if ($request->query('export') === 'pdf') {
-            $allRows = $reportService->getAllHourlyRateUpdatesData($start, $end);
-            $pdf = Pdf::loadView('reports.rate_updates_pdf', [
-                'rows'  => $allRows,
-                'start' => $start->format('Y/m/d'),
-                'end'   => $end->format('Y/m/d'),
-            ])->setPaper('a4','landscape');
-
-            return $pdf->download('hourly-rate-updates_'.$start->format('Ymd').'-'.$end->format('Ymd').'.pdf');
-        }
-
-        // 4) Otherwise: paginate and render view
-        $rows = $reportService
-            ->getHourlyRateUpdatesData($start, $end, 15)
-            ->appends($request->only(['year','start','end']));
-
-        return view('reports.rate_updates', [
-            'rows'  => $rows,
-            'start' => $start->format('Y/m/d'),
-            'end'   => $end->format('Y/m/d'),
-            'year'  => $request->year ?? $start->year,
-        ]);
+        return $this->serveReport(
+            $request,
+            [$service, 'getHourlyRateUpdatesData'],
+            [$service, 'getAllHourlyRateUpdatesData'],
+            'reports.rate_updates',
+            HourlyRateUpdatesExport::class,
+            'reports.rate_updates_pdf',
+            'hourly-rate-updates',
+            [
+                'year' => $year,
+            ],
+        );
     }
 
     /**
-     * Show or export the "New Hires" report based on worksnapUser.created_at.
-     *
-     * @param Request $request
-     * @param Report $reportService
-     * @return Application|Factory|View|\Illuminate\Foundation\Application|Response|\Illuminate\View\View|BinaryFileResponse
+     * New Hires report.
      */
-    public function newHires(Request $request, Report $reportService)
+    public function newHires(ReportRangeRequest $request, Report $service): Response
     {
-        // Defaults: first and last day of current month
-        $start = Carbon::now()->startOfMonth();
-        $end   = Carbon::now()->endOfMonth();
-
-        // Override if valid range passed
-        if ($request->filled('start') && $request->filled('end')) {
-            try {
-                $start = Carbon::parse($request->start)->startOfDay();
-                $end   = Carbon::parse($request->end)->endOfDay();
-            } catch (\Exception $e) {
-                // keep defaults
-            }
-        }
-
-        // Excel export?
-        if ($request->query('export') === 'excel') {
-            $all = $reportService->getAllNewUsersData($start, $end);
-            return Excel::download(
-                new NewHiresExport($all->toArray()),
-                "new-hires_{$start->format('Ymd')}-{$end->format('Ymd')}.xlsx"
-            );
-        }
-
-        // PDF export?
-        if ($request->query('export') === 'pdf') {
-            $all = $reportService->getAllNewUsersData($start, $end);
-            $pdf = Pdf::loadView('reports.new_hires_pdf', [
-                'rows'  => $all,
-                'start' => $start->format('Y/m/d'),
-                'end'   => $end->format('Y/m/d'),
-            ])->setPaper('a4','landscape');
-
-            return $pdf->download("new-hires_{$start->format('Ymd')}-{$end->format('Ymd')}.pdf");
-        }
-
-        // Otherwise paginate & render
-        $rows = $reportService
-            ->getNewUsersData($start, $end, 15)
-            ->appends($request->only(['start','end']));
-
-        return view('reports.new_hires', [
-            'rows'  => $rows,
-            'start' => $start->format('Y/m/d'),
-            'end'   => $end->format('Y/m/d'),
-        ]);
-    }
-
-    public function terminations(Request $request, Report $reportService)
-    {
-        // Defaults: first and last day of current month
-        $start = Carbon::now()->startOfMonth();
-        $end   = Carbon::now()->endOfMonth();
-
-        // Override if valid range passed
-        if ($request->filled('start') && $request->filled('end')) {
-            try {
-                $start = Carbon::parse($request->start)->startOfDay();
-                $end   = Carbon::parse($request->end)->endOfDay();
-            } catch (\Exception $e) {
-                // keep defaults
-            }
-        }
-
-        if ($request->export==='excel') {
-            $all = $reportService->getAllTerminationsData($start,$end);
-            return \Maatwebsite\Excel\Facades\Excel::download(
-                new \App\Exports\TerminationsExport($all->toArray()),
-                "terminations_{$start->format('Ymd')}-{$end->format('Ymd')}.xlsx"
-            );
-        }
-        if ($request->export==='pdf') {
-            $all = $reportService->getAllTerminationsData($start,$end);
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.terminations_pdf', [
-                'rows'=>$all,'start'=>$start->format('Y/m/d'),'end'=>$end->format('Y/m/d'),
-            ])->setPaper('a4','landscape');
-            return $pdf->download("terminations_{$start->format('Ymd')}-{$end->format('Ymd')}.pdf");
-        }
-
-        $rows = $reportService->getTerminationsData($start,$end,15)
-            ->appends($request->only(['start','end']));
-
-        return view('reports.terminations', compact('rows','start','end'));
+        return $this->serveReport(
+            $request,
+            [$service, 'getNewUsersData'],
+            [$service, 'getAllNewUsersData'],
+            'reports.new_hires',
+            NewHiresExport::class,
+            'reports.new_hires_pdf',
+            'new-hires'
+        );
     }
 
     /**
-     * Display or export the Login report.
-     *
-     * @param Request $request
-     * @param Report $reportService
-     * @return Application|Factory|View|\Illuminate\Foundation\Application|Response|\Illuminate\View\View|BinaryFileResponse
+     * Contractor Terminations report.
      */
-    public function login(Request $request, Report $reportService)
+    public function terminations(ReportRangeRequest $request, Report $service): Response
     {
-        // Defaults: first and last day of current month
-        $start = Carbon::now()->startOfMonth();
-        $end   = Carbon::now()->endOfMonth();
-
-        // Override if valid range passed
-        if ($request->filled('start') && $request->filled('end')) {
-            try {
-                $start = Carbon::parse($request->start)->startOfDay();
-                $end   = Carbon::parse($request->end)->endOfDay();
-            } catch (\Exception $e) {
-                // keep defaults
-            }
-        }
-
-        // Excel export?
-        if ($request->query('export') === 'excel') {
-            $all = $reportService->getAllLoginReportData($start, $end);
-            return Excel::download(
-                new \App\Exports\LoginReportExport($all->toArray()),
-                "login-report_{$start->format('Ymd')}-{$end->format('Ymd')}.xlsx"
-            );
-        }
-
-        // PDF export?
-        if ($request->query('export') === 'pdf') {
-            $all = $reportService->getAllLoginReportData($start, $end);
-            $pdf = Pdf::loadView('reports.login_pdf', [
-                'rows'  => $all,
-                'start' => $start->format('Y/m/d'),
-                'end'   => $end->format('Y/m/d'),
-            ])->setPaper('a4','landscape');
-
-            return $pdf->download("login-report_{$start->format('Ymd')}-{$end->format('Ymd')}.pdf");
-        }
-
-        // Otherwise paginate & render
-        $rows = $reportService
-            ->getLoginReportData($start, $end, 15)
-            ->appends($request->only(['start','end']));
-
-        return view('reports.login', [
-            'rows'  => $rows,
-            'start' => $start->format('Y/m/d'),
-            'end'   => $end->format('Y/m/d'),
-        ]);
+        return $this->serveReport(
+            $request,
+            [$service, 'getTerminationsData'],
+            [$service, 'getAllTerminationsData'],
+            'reports.terminations',
+            TerminationsExport::class,
+            'reports.terminations_pdf',
+            'terminations'
+        );
     }
 
     /**
-     * Reporte anual de horas trabajadas por profesional,
-     * agrupadas por mes y filtrables por proyecto.
+     * Login report.
      */
-    public function annualHours(Request $request, AnnualHoursReportService $reportService)
+    public function login(ReportRangeRequest $request, Report $service): Response
     {
-        // 1) Validar inputs
-        $validated = $request->validate([
-            'year'       => ['integer','min:2000','max:' . now()->year],
-            'project_id' => ['nullable','exists:projects,id'],
-            'export'     => ['nullable','in:excel,pdf'],
-        ]);
+        return $this->serveReport(
+            $request,
+            [$service, 'getLoginReportData'],
+            [$service, 'getAllLoginReportData'],
+            'reports.login',
+            LoginReportExport::class,
+            'reports.login_pdf',
+            'login-report'
+        );
+    }
 
-        // 2) Preparar parámetros con valores por defecto
-        $year        = (int) ($validated['year'] ?? now()->year);
-        $projectId   = $validated['project_id'] ?? null;
-        $export      = $validated['export'] ?? null;
+    /**
+     * Annual Hours report (no pagination, exportable).
+     */
+    public function annualHours(AnnualHoursRequest $request, AnnualHoursReportService $service): Response
+    {
+        $year      = $request->getYear();
+        $projectId = $request->getProjectId();
 
-        // 3) Delegar al servicio la obtención de datos
-        $data = $reportService->getAnnualHoursData($year, $projectId);
+        $allData  = $service->getAnnualHoursData($year, $projectId);
+        $projects = Project::select('id', 'name')->orderBy('name')->get();
 
-        // 4) Exportar Excel si se solicita
-        if ($export === 'excel') {
-            return Excel::download(
-                new AnnualHoursExport($data, $year),
-                "annual-hours-{$year}.xlsx"
-            );
-        }
-
-        // 5) Exportar PDF si se solicita
-        if ($export === 'pdf') {
-            $pdf = Pdf::loadView('reports.annual_hours_pdf', compact('data', 'year'))
-                      ->setPaper('a4', 'landscape');
-
-            return $pdf->download("annual-hours-{$year}.pdf");
-        }
-
-        // 6) Renderizar vista web
-        $projects = Project::orderBy('name')->get(['id', 'name']);
-
-        return view('reports.annual_hours', [
-            'data'            => $data,
-            'year'            => $year,
-            'projects'        => $projects,
-            'selectedProject' => $projectId,
-        ]);
+        return $this->serveReport(
+            $request,
+            fn($start, $end, $perPage) => new LengthAwarePaginator(
+                $allData,
+                $allData->count(),
+                $allData->count(),
+                1,
+                ['path' => url()->current(), 'query' => request()->query()]
+            ),
+            fn($start, $end) => $allData,
+            'reports.annual_hours',
+            AnnualHoursExport::class,
+            'reports.annual_hours_pdf',
+            "annual-hours-{$year}",
+            [
+                'view'            => 'reports.annual_hours',
+                'data'            => $allData,
+                'year'            => $year,
+                'projects'        => $projects,
+                'selectedProject' => $projectId,
+            ],
+            null
+        );
     }
 }
